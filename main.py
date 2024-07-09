@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from matplotlib.widgets import Slider
 from numpy import pi, sin, cos
 
 dt = 0.001
@@ -9,7 +10,7 @@ dt = 0.001
 # gravity = int(input("\n\nEnter gravity\n: "))
 
 velocity = 10
-angle = 1 / 180 * pi
+angle = 45 / 180 * pi
 height = 10
 gravity = 10
 
@@ -25,17 +26,25 @@ yAcc = -gravity
 yPoints = []
 xPoints = []
 
+xDif = 0.0001
+i = 0
 while y >= 0:
-    x += xVel * dt
-    y += yVel * dt
-
-    xVel += xAcc * dt
-    yVel += yAcc * dt
+    x = i * xDif
+    t = x / xVel
+    
+    y = yVel * t + 0.5 * yAcc * t * t + height
 
     xPoints.append(x)
     yPoints.append(y)
-    print(y)
 
+    i += 1
     
+
+# Finding the apogee
+maxTime = -yVel / yAcc
+apogee = (xVel * maxTime + 0.5 * xAcc * maxTime ** 2, yVel * maxTime + 0.5 * yAcc * maxTime ** 2 + height)
+
+
 plt.plot(xPoints, yPoints)
+plt.plot(apogee[0], apogee[1], "ro")
 plt.show()
