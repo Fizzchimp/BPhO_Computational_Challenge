@@ -55,9 +55,9 @@ class World():
                 # Scroll Wheel Input
                 if event.type == pg.MOUSEWHEEL:
                     if event.y == 1:
-                        self.display.graphZoom /= 1.5
+                        self.display.graphZoom /= 1.125
                     if event.y == -1:
-                        self.display.graphZoom *= 1.5
+                        self.display.graphZoom *= 1.125
 
                 # Mouse Button Inputs
                 if event.type == pg.MOUSEBUTTONDOWN:

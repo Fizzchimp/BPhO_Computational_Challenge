@@ -50,9 +50,21 @@ class Display():
 
     def drawAxes(self, scale):
         centre = self.graphCentre
-        axisWidth = 10
+        
+        print(self.graphZoom)
+        
+        # 20 < x: 5
+        # 10 < x < 20: 2
+        # x < 10: 1
+        
 
-        # axisWidth = scale
+        if self.graphZoom > 20:
+            axisWidth = 5
+        elif self.graphZoom < 10:
+            axisWidth = 1
+        else:
+            axisWidth = 2
+
 
         # # Drawing the axes
         pg.draw.line(self.graphSurf, (150, 150, 150), (centre[0], 0), (centre[0], 400), 3)
@@ -64,7 +76,7 @@ class Display():
             x = centre[0] + i * axisWidth * scale
 
             text = str(i * axisWidth)
-            self.graphSurf.blit(self.graphFont.render(text, True, (100, 100, 100)), (x - 10 * len(text), centre[1]))
+            self.graphSurf.blit(self.graphFont.render(text, True, (100, 100, 100)), (x - 10 * len(text) - 2, centre[1]))
 
             if x > 600:
                 break
@@ -74,27 +86,38 @@ class Display():
         i = 1
         while True:
             x = centre[0] - i * axisWidth * scale
+            
+            text = str(-i * axisWidth)
+            self.graphSurf.blit(self.graphFont.render(text, True, (100, 100, 100)), (x - 10 * len(text) + 3, centre[1]))
+            
             if x < 0:
                 break
-            text = str(-i * axisWidth)
             pg.draw.line(self.graphSurf, (150, 150, 150), (x, 0), (x, 400))
             i += 1
 
         i = 1
         while True:
             y = centre[1] + i * axisWidth * scale
+            
+            text = str(-i * axisWidth)
+            self.graphSurf.blit(self.graphFont.render(text, True, (100, 100, 100)), (centre[0] - 10 * len(text) + 3, y))
             if y > 400:
                 break
-            text = str(i * axisWidth)
             pg.draw.line(self.graphSurf, (150, 150, 150), (0, y), (600, y))
             i += 1
 
         i = 1
         while True:
             y = centre[1] - i * axisWidth * scale
+           
+            text = str(i * axisWidth)
+            self.graphSurf.blit(self.graphFont.render(text, True, (100, 100, 100)), (centre[0] - 10 * len(text) - 2, y))
+            
             if y < 0:
                 break
             text = str(-i * axisWidth)
             pg.draw.line(self.graphSurf, (150, 150, 150), (0, y), (600, y))
             i += 1
+            
+        self.graphSurf.blit(self.graphFont.render("0", True, (100, 100, 100)), (centre[0] - 12, centre[1]))
 
