@@ -123,3 +123,21 @@ class Display():
             
         self.graphSurf.blit(self.graphFont.render("0", True, (100, 100, 100)), (centre[0] - 12, centre[1]))
 
+class Slider():
+    def __init__(self, point1, point2, initVal, range):
+        
+        self.point1
+        self.point2
+        
+        self.lineVect = (point1[0] - point2[0], point1[1] - point2[1])
+        
+        self.val = initVal
+        self.range = range
+        
+    #def getPos(self, mousePos):
+        
+        
+    def draw(self, surface):
+        percentageAlong = self.val / self.range
+        pg.draw.line(self.surface, (150, 150, 150), self.point1, self.point2, 5)
+        pg.draw.circle(self.surface, (50, 50, 50), (self.point1[0] + self.lineVect[0] * percentageAlong, self.point1[1] + self.lineVect[1] * percentageAlong)

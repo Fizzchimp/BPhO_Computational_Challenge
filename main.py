@@ -7,20 +7,15 @@ class World():
         pg.init()
         self.display = Display()
 
-    def basicProj(self):
+    def basicProj(self, initPos, initVelocity, angle, gravity = 9.81):
 
         # velocity = int(input("Enter start velocity\n: "))
         # angle = int(input("\n\nEnter angle\n: ")) / 180 * pi
         # height = int(input("\n\nEnter starting height\n: "))
         # gravity = int(input("\n\nEnter gravity\n: "))
 
-        velocity = 10
-        angle = 45 / 180 * pi
-        height = 10
-        gravity = 10
-
-        x = 0
-        y = height
+        velocity = initVelocity
+        angle = angle / 180 * pi
 
         xVel = velocity * cos(angle)
         yVel = velocity * sin(angle)
@@ -31,12 +26,14 @@ class World():
         self.points = []
 
         xDif = 0.01
+        
+        x = initPos[0]
+        y = 0
         i = 0
         while y >= 0:
-            x = i * xDif
-            t = x / xVel
-            
-            y = yVel * t + 0.5 * yAcc * t * t + height
+            x += xDif
+            t = (x - initPos[0]) / xVel
+            y = (yVel * t)  + (0.5 * yAcc * (t ** 2)) + initPos[1]
 
             self.points.append((x, y))
 
@@ -45,7 +42,7 @@ class World():
 
         # Finding the apogee
         maxTime = -yVel / yAcc
-        self.apogee = (xVel * maxTime + 0.5 * xAcc * maxTime ** 2, yVel * maxTime + 0.5 * yAcc * maxTime ** 2 + height)
+        self.apogee = (xVel * maxTime + 0.5 * xAcc * maxTime ** 2, yVel * maxTime + 0.5 * yAcc * maxTime ** 2 + initPos[1])
 
     
     def mousePos(self):
@@ -73,13 +70,13 @@ class World():
                         self.display.graphCentre = [300 - difference[0] / 1.125, 200 - difference[1] / 1.125]
 
                 # Mouse Button Inputs
-                if event.type == pg.MOUSEBUTTONDOWN:
+                if event.type == pg.MOUSEBUTTONDOWN and mousePos != False:
                     self.mouseTracking = True
                     pg.mouse.get_rel()
                 if event.type == pg.MOUSEBUTTONUP: self.mouseTracking = False
 
                 # Keyboard Inputs
-                if event.type == pg.KEYUP:
+                if event.type == pg.KEYDOWN:
                     if event.key == pg.K_ESCAPE: self.running = False
 
 
@@ -97,10 +94,10 @@ class World():
             self.display.drawScreen(self.points)
 
 world = World()
-# world.basicProj()
+world.basicProj((0, 100), 10, 45)
 
-world.points = []
-for i in range(720):
-    world.points.append((i / 180 * pi, sin(i / 180 * pi)))
+#world.points = []
+#for i in range(720):
+#    world.points.append((i / 180 * pi, sin(i / 180 * pi)))
 
 world.run()
