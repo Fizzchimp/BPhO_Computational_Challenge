@@ -1,5 +1,5 @@
 import pygame as pg
-from numpy import sin, cos, pi
+from numpy import sin, cos, pi, log10
 
 WIDTH = 700
 HEIGHT = 700
@@ -8,7 +8,7 @@ AXES_SCALES = (1, 2, 5)
 
 class Display():
     def __init__(self):
-        self.graphFont = pg.font.SysFont("arial", 20)
+        self.graphFont = pg.font.SysFont("arial", 17)
         self.screen = pg.display.set_mode([WIDTH, HEIGHT])
 
         self.graphSurf = pg.Surface((600, 400))
@@ -51,32 +51,34 @@ class Display():
     def drawAxes(self, scale):
         centre = self.graphCentre
         
-        print(self.graphZoom)
-        
-        # 20 < x: 5
-        # 10 < x < 20: 2
-        # x < 10: 1
+        exponent = log10(self.graphZoom) // 1
+        mantissa = self.graphZoom / (10 ** exponent)
         
 
-        if self.graphZoom > 20:
-            axisWidth = 5
-        elif self.graphZoom < 10:
-            axisWidth = 1
-        else:
-            axisWidth = 2
+        if 2.5 < mantissa < 5:
+            axisWidth = 5 * (10 ** (exponent - 1))
+        
+        elif 1 < mantissa <= 2.5:
+            axisWidth = 2 * (10 ** (exponent - 1))
+            
+        elif 5 < mantissa:
+            axisWidth = 1 * (10 ** exponent)
+           
 
-
+        if axisWidth >= 1:
+            axisWidth = int(axisWidth)
+            
         # # Drawing the axes
         pg.draw.line(self.graphSurf, (150, 150, 150), (centre[0], 0), (centre[0], 400), 3)
         pg.draw.line(self.graphSurf, (150, 150, 150), (0, centre[1]), (600, centre[1]), 3)
 
-
+        
         i = 1
         while True:
             x = centre[0] + i * axisWidth * scale
 
-            text = str(i * axisWidth)
-            self.graphSurf.blit(self.graphFont.render(text, True, (100, 100, 100)), (x - 10 * len(text) - 2, centre[1]))
+            textSurf = self.graphFont.render(str(i * axisWidth), True, (100, 100, 100))
+            self.graphSurf.blit(textSurf, (x - textSurf.get_size()[0] - 2, centre[1]))
 
             if x > 600:
                 break
@@ -87,8 +89,8 @@ class Display():
         while True:
             x = centre[0] - i * axisWidth * scale
             
-            text = str(-i * axisWidth)
-            self.graphSurf.blit(self.graphFont.render(text, True, (100, 100, 100)), (x - 10 * len(text) + 3, centre[1]))
+            textSurf = self.graphFont.render(str(-i * axisWidth), True, (100, 100, 100))
+            self.graphSurf.blit(textSurf, (x - textSurf.get_size()[0] - 2, centre[1]))
             
             if x < 0:
                 break
@@ -99,8 +101,8 @@ class Display():
         while True:
             y = centre[1] + i * axisWidth * scale
             
-            text = str(-i * axisWidth)
-            self.graphSurf.blit(self.graphFont.render(text, True, (100, 100, 100)), (centre[0] - 10 * len(text) + 3, y))
+            textSurf = self.graphFont.render(str(-i * axisWidth), True, (100, 100, 100))
+            self.graphSurf.blit(textSurf, (centre[0] - textSurf.get_size()[0] - 3, y))
             if y > 400:
                 break
             pg.draw.line(self.graphSurf, (150, 150, 150), (0, y), (600, y))
@@ -110,8 +112,8 @@ class Display():
         while True:
             y = centre[1] - i * axisWidth * scale
            
-            text = str(i * axisWidth)
-            self.graphSurf.blit(self.graphFont.render(text, True, (100, 100, 100)), (centre[0] - 10 * len(text) - 2, y))
+            textSurf = self.graphFont.render(str(i * axisWidth), True, (100, 100, 100))
+            self.graphSurf.blit(textSurf, (centre[0] - textSurf.get_size()[0] - 3, y))
             
             if y < 0:
                 break

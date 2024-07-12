@@ -47,17 +47,30 @@ class World():
         maxTime = -yVel / yAcc
         self.apogee = (xVel * maxTime + 0.5 * xAcc * maxTime ** 2, yVel * maxTime + 0.5 * yAcc * maxTime ** 2 + height)
 
-
+    
+    def mousePos(self):
+        pos = pg.mouse.get_pos()
+        relPos = (pos[0] - 50, pos[1] - 50)
+        if 0 <= relPos[0] <= 600 and 0 <= relPos[1] <= 400:
+            return  relPos
+        else: return False
+        
     def doEvents(self):
+        mousePos = self.mousePos()
         for event in pg.event.get():
                 if event.type == pg.QUIT: self.running = False
                  
                 # Scroll Wheel Input
-                if event.type == pg.MOUSEWHEEL:
+                if event.type == pg.MOUSEWHEEL and mousePos != False:
                     if event.y == 1:
+                        difference = (mousePos[0] - self.display.graphCentre[0], mousePos[1] - self.display.graphCentre[1])
                         self.display.graphZoom /= 1.125
+                        self.display.graphCentre = [mousePos[0] - difference[0] * 1.125, mousePos[1] - difference[1] * 1.125]
+                        
                     if event.y == -1:
+                        difference = (300 - self.display.graphCentre[0], 200 - self.display.graphCentre[1])
                         self.display.graphZoom *= 1.125
+                        self.display.graphCentre = [300 - difference[0] / 1.125, 200 - difference[1] / 1.125]
 
                 # Mouse Button Inputs
                 if event.type == pg.MOUSEBUTTONDOWN:
