@@ -2,6 +2,7 @@ from numpy import pi, sin, cos, sqrt, arctan, arcsin
 import pygame as pg
 from display import Display, G_WIDTH, G_HEIGHT, G_POINT
 
+gravity = 9.81
 class World():
     def __init__(self):
         pg.init()
@@ -9,7 +10,7 @@ class World():
         self.lines = []
         self.points = []
     # Task 1/2
-    def basicProj(self, initPos, initVelocity, angle, gravity = 9.81):
+    def basicProj(self, initPos, initVelocity, angle):
 
         xVel = initVelocity * cos(angle)
         yVel = initVelocity * sin(angle)
@@ -41,7 +42,7 @@ class World():
 
 
     # Task 3
-    def twoPoints(self, point1, point2, initVelocity, gravity = 9.81):
+    def twoPoints(self, point1, point2, initVelocity):
         xDisp = point2[0] - point1[0]
         yDisp = point2[1] - point1[1]
 
@@ -63,7 +64,7 @@ class World():
 
         return line1, line2
 
-    def minVelocity(self, point1, point2, gravity = 9.81):
+    def minVelocity(self, point1, point2):
         xDisp = point2[0] - point1[0]
         yDisp = point2[1] - point1[1]
 
@@ -76,11 +77,31 @@ class World():
 
 
     # Task 4
-    def maxRange(self, initPos, initVelocity, gravity = 9.81):
+    def maxRange(self, initPos, initVelocity):
         yDisp = -initPos[1]
         angle = arcsin(1 / (sqrt(2 + ((2 * gravity * -yDisp) / (initVelocity ** 2)))))
         return self.basicProj(initPos, initVelocity, angle)
     
+
+    # Task 5
+    def boundParabola(self, initPos, initVelocity):
+        x = initPos[0]
+        points = []
+        while True:
+            y = ((initVelocity ** 2) / (2 * gravity)) - ((gravity * (x ** 2)) / (2 * (initVelocity) ** 2))
+            points.append((x, y))
+            if y < 0:
+                break
+            x += 0.1
+
+        return points
+
+
+    # Task 6
+    def findDistance(self, initPos, initVelocity):
+        pass
+
+
 
     # Game Handling
     def mousePos(self):
@@ -136,8 +157,11 @@ world = World()
 point1 = (0, 0)
 point2 = (10, 10)
 
-maxLine = world.maxRange(point2, 10)[0]
-world.lines.append(maxLine)
+line = world.basicProj(point2, 10, 89 / 180 * pi)[0]
+world.lines.append(line)
+
+boundParabola = world.boundParabola(point2, 10)
+world.lines.append(boundParabola)
 # world.points.append(point1)
 # world.points.append(point2)
 
