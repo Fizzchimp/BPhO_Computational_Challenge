@@ -1,54 +1,92 @@
-from numpy import pi, sin, cos
+from numpy import pi, sin, cos, sqrt, arctan, arcsin
 import pygame as pg
-from display import Display
+from display import Display, G_WIDTH, G_HEIGHT, G_POINT
 
 class World():
     def __init__(self):
         pg.init()
         self.display = Display()
-
+        self.lines = []
+        self.points = []
+    # Task 1/2
     def basicProj(self, initPos, initVelocity, angle, gravity = 9.81):
 
-        # velocity = int(input("Enter start velocity\n: "))
-        # angle = int(input("\n\nEnter angle\n: ")) / 180 * pi
-        # height = int(input("\n\nEnter starting height\n: "))
-        # gravity = int(input("\n\nEnter gravity\n: "))
-
-        velocity = initVelocity
-        angle = angle / 180 * pi
-
-        xVel = velocity * cos(angle)
-        yVel = velocity * sin(angle)
+        xVel = initVelocity * cos(angle)
+        yVel = initVelocity * sin(angle)
 
         xAcc = 0
         yAcc = -gravity
 
-        self.points = []
-
-        xDif = 0.01
+        xDif = 0.1
         
         x = initPos[0]
         y = 0
         i = 0
+        points = []
         while y >= 0:
             x += xDif
             t = (x - initPos[0]) / xVel
             y = (yVel * t)  + (0.5 * yAcc * (t ** 2)) + initPos[1]
 
-            self.points.append((x, y))
+            points.append((x, y))
 
             i += 1
     
 
         # Finding the apogee
         maxTime = -yVel / yAcc
-        self.apogee = (xVel * maxTime + 0.5 * xAcc * maxTime ** 2, yVel * maxTime + 0.5 * yAcc * maxTime ** 2 + initPos[1])
+        apogee = (xVel * maxTime + 0.5 * xAcc * maxTime ** 2, yVel * maxTime + 0.5 * yAcc * maxTime ** 2 + initPos[1])
 
+        return points, apogee
+
+
+    # Task 3
+    def twoPoints(self, point1, point2, initVelocity, gravity = 9.81):
+        xDisp = point2[0] - point1[0]
+        yDisp = point2[1] - point1[1]
+
+        a = (gravity * (xDisp ** 2)) / (2 * (initVelocity ** 2))
+        b = -xDisp
+        c = (gravity * (xDisp ** 2)) / (2 * initVelocity ** 2) + yDisp
+        
+        z1 = (-b + sqrt((b ** 2) - (4 * a * c))) / (2 * a)
+        z2 = (-b - sqrt((b ** 2) - (4 * a * c))) / (2 * a)
+
+        angle1 = arctan(z1)
+        angle2 = arctan(z2)
+
+        self.points.append(point1)
+        self.points.append(point2)
+
+        line1, apogee1 = self.basicProj(point1, initVelocity, angle1)
+        line2, apogee2 = self.basicProj(point1, initVelocity, angle2)
+
+        return line1, line2
+
+    def minVelocity(self, point1, point2, gravity = 9.81):
+        xDisp = point2[0] - point1[0]
+        yDisp = point2[1] - point1[1]
+
+        tangle = (yDisp + sqrt((xDisp ** 2) + (yDisp ** 2))) / xDisp
+        angle = arctan(tangle)
+
+        velocity = sqrt(gravity * xDisp * tangle)
+
+        return self.basicProj(point1, velocity, angle)
+
+
+    # Task 4
+    def maxRange(self, initPos, initVelocity, gravity = 9.81):
+        yDisp = -initPos[1]
+        angle = arcsin(1 / (sqrt(2 + ((2 * gravity * -yDisp) / (initVelocity ** 2)))))
+        return self.basicProj(initPos, initVelocity, angle)
     
+
+    # Game Handling
     def mousePos(self):
         pos = pg.mouse.get_pos()
-        relPos = (pos[0] - 50, pos[1] - 50)
-        if 0 <= relPos[0] <= 600 and 0 <= relPos[1] <= 400:
+        relPos = (pos[0] - G_POINT[0], pos[1] - G_POINT[1])
+        if 0 <= relPos[0] <= G_WIDTH and 0 <= relPos[1] <= G_HEIGHT:
             return  relPos
         else: return False
         
@@ -65,9 +103,9 @@ class World():
                         self.display.graphCentre = [mousePos[0] - difference[0] * 1.125, mousePos[1] - difference[1] * 1.125]
                         
                     if event.y == -1:
-                        difference = (300 - self.display.graphCentre[0], 200 - self.display.graphCentre[1])
+                        difference = (G_WIDTH // 2 - self.display.graphCentre[0], G_HEIGHT // 2 - self.display.graphCentre[1])
                         self.display.graphZoom *= 1.125
-                        self.display.graphCentre = [300 - difference[0] / 1.125, 200 - difference[1] / 1.125]
+                        self.display.graphCentre = [G_WIDTH // 2 - difference[0] / 1.125, G_HEIGHT // 2 - difference[1] / 1.125]
 
                 # Mouse Button Inputs
                 if event.type == pg.MOUSEBUTTONDOWN and mousePos != False:
@@ -91,13 +129,23 @@ class World():
         while self.running:
             
             self.doEvents()
-            self.display.drawScreen(self.points)
+            self.display.drawScreen(self.lines, self.points)
 
 world = World()
-world.basicProj((0, 100), 10, 45)
 
-#world.points = []
-#for i in range(720):
-#    world.points.append((i / 180 * pi, sin(i / 180 * pi)))
+point1 = (0, 0)
+point2 = (10, 10)
+
+maxLine = world.maxRange(point2, 10)[0]
+world.lines.append(maxLine)
+# world.points.append(point1)
+# world.points.append(point2)
+
+# line1, line2 = world.twoPoints(point1, point2, 20)
+# world.lines.append(line1)
+# world.lines.append(line2)
+
+# minVel = world.minVelocity(point1, point2)[0]
+# world.lines.append(minVel)
 
 world.run()
