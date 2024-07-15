@@ -85,11 +85,11 @@ class World():
 
     # Task 5
     def boundParabola(self, initPos, initVelocity):
-        x = initPos[0]
+        x = 0
         points = []
         while True:
             y = ((initVelocity ** 2) / (2 * gravity)) - ((gravity * (x ** 2)) / (2 * (initVelocity) ** 2))
-            points.append((x, y))
+            points.append((x + initPos[0], y + initPos[1]))
             if y < 0:
                 break
             x += 0.1
@@ -157,19 +157,19 @@ world = World()
 point1 = (0, 0)
 point2 = (10, 10)
 
-line = world.basicProj(point2, 10, 89 / 180 * pi)[0]
+line = world.basicProj(point1, 10, 45 / 180 * pi)[0]
 world.lines.append(line)
 
-boundParabola = world.boundParabola(point2, 10)
+boundParabola = world.boundParabola(point1, 10)
 world.lines.append(boundParabola)
-# world.points.append(point1)
-# world.points.append(point2)
+world.points.append(point1)
+world.points.append(point2)
 
-# line1, line2 = world.twoPoints(point1, point2, 20)
-# world.lines.append(line1)
-# world.lines.append(line2)
+line1, line2 = world.twoPoints(point1, point2, 20)
+world.lines.append(line1)
+world.lines.append(line2)
 
-# minVel = world.minVelocity(point1, point2)[0]
-# world.lines.append(minVel)
+minVel = world.minVelocity(point1, point2)[0]
+world.lines.append(minVel)
 
 world.run()
