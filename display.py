@@ -72,73 +72,52 @@ class Display():
             
         elif 5 < mantissa:
             axisWidth = 1 * (10 ** exponent)
-           
-
-        if axisWidth >= 1:
-            axisWidth = int(axisWidth)
+        
             
         # Drawing the axes
-        if 0 < centre[0] < G_WIDTH: pg.draw.line(self.graphSurf, (150, 150, 150), (centre[0], 0), (centre[0], G_HEIGHT), 3)
-        if 0 < centre[1] < G_HEIGHT: pg.draw.line(self.graphSurf, (150, 150, 150), (0, centre[1]), (G_WIDTH, centre[1]), 3)
+        if centre[0] < G_WIDTH: pg.draw.line(self.graphSurf, (150, 150, 150), (centre[0], 0), (centre[0], G_HEIGHT), 3)
+        if centre[1] < G_HEIGHT: pg.draw.line(self.graphSurf, (150, 150, 150), (0, centre[1]), (G_WIDTH, centre[1]), 3)
 
-        centreOffset = (centre[0] % (scale * axisWidth), centre[1] % (scale * axisWidth))
-        for i in range(5):
-            x = centreOffset[0] + axisWidth * scale * i
-            pg.draw.line(self.graphSurf, (150, 150, 150), (x, 0), (x, G_HEIGHT))
-           
-        for i in range(3):
-            y = centreOffset[1] + axisWidth * scale * i
-            pg.draw.line(self.graphSurf, (150, 150, 150), (0, y), (G_WIDTH, y))
-
-        i = 1
-        while True:
-            x = centre[0] + i * axisWidth * scale
-
-            textSurf = self.graphFont.render(str(i * axisWidth), True, (100, 100, 100))
-            self.graphSurf.blit(textSurf, (x - textSurf.get_size()[0] - 2, centre[1]))
-
-            if x > G_WIDTH:
-                break
-            #pg.draw.line(self.graphSurf, (150, 150, 150), (x, 0), (x, G_HEIGHT))
-            i += 1
+        axScale = axisWidth * scale
         
-        i = 1
-        while True:
-            x = centre[0] - i * axisWidth * scale
-            
-            textSurf = self.graphFont.render(str(-i * axisWidth), True, (100, 100, 100))
-            self.graphSurf.blit(textSurf, (x - textSurf.get_size()[0] - 2, centre[1]))
-            
-            if x < 0:
-                break
-            #pg.draw.line(self.graphSurf, (150, 150, 150), (x, 0), (x, G_HEIGHT))
-            i += 1
+        axisBefore = (-centre[0] // axScale + 1, centre[1] // axScale + 1)
+        centreOffset = (centre[0] % axScale, centre[1] % axScale)
 
-        i = 1
-        while True:
-            y = centre[1] + i * axisWidth * scale
-            
-            textSurf = self.graphFont.render(str(-i * axisWidth), True, (100, 100, 100))
-            self.graphSurf.blit(textSurf, (centre[0] - textSurf.get_size()[0] - 3, y))
-            if y > G_HEIGHT:
-                break
-            #pg.draw.line(self.graphSurf, (150, 150, 150), (0, y), (G_WIDTH, y))
-            i += 1
+        if axisWidth >= 1: textType = True
+        else: textType = False
 
-        i = 1
-        while True:
-            y = centre[1] - i * axisWidth * scale
-           
-            textSurf = self.graphFont.render(str(i * axisWidth), True, (100, 100, 100))
-            self.graphSurf.blit(textSurf, (centre[0] - textSurf.get_size()[0] - 3, y))
+        # Draw grid
+        for i in range(int(G_WIDTH // axScale) + 2):
+            x = centreOffset[0] + axScale * i
+
+            text = axisWidth * (axisBefore[0] + i)
+            if textType: text = int(text)
+
+            textSurf = self.graphFont.render(str(text), True, (100, 100, 100))
+            dims = textSurf.get_size()
+
+            if centre[1] < 4: self.graphSurf.blit(textSurf, (x - dims[0] - 2, 4))
+            if 4 < centre[1] < G_HEIGHT - dims[1] - 4: self.graphSurf.blit(textSurf, (x - dims[0] - 2, centre[1]))
+            if G_HEIGHT - dims[1] - 4 < centre[1]: self.graphSurf.blit(textSurf, (x - dims[0] - 2, G_HEIGHT - dims[1] - 4))
+
+            pg.draw.line(self.graphSurf, (150, 150, 150), (x, 0), (x, G_HEIGHT))
+        
+        
+        for i in range(int(G_HEIGHT // axScale) + 2):
+            y = centreOffset[1] + axScale * (i - 1)
+
+            text = axisWidth * (axisBefore[1] - i)
+            if textType: text = int(text)
+
+            textSurf = self.graphFont.render(str(text), True, (100, 100, 100))
+            dims = textSurf.get_size()
+
+            if centre[0] < dims[0] + 8: self.graphSurf.blit(textSurf, (6, y))
+            if dims[0] + 8 < centre[0] < G_WIDTH - 4: self.graphSurf.blit(textSurf, (centre[0] - dims[0] - 2, y))
+            if G_WIDTH - 4 < centre[0]: self.graphSurf.blit(textSurf, (G_WIDTH - dims[0] - 6, y))
+
+            pg.draw.line(self.graphSurf, (150, 150, 150), (0, y), (G_WIDTH, y))
             
-            if y < 0:
-                break
-            text = str(-i * axisWidth)
-            # pg.draw.line(self.graphSurf, (150, 150, 150), (0, y), (G_WIDTH, y))
-            i += 1
-            
-        self.graphSurf.blit(self.graphFont.render("0", True, (100, 100, 100)), (centre[0] - 12, centre[1]))
 
 class Slider():
     def __init__(self, point1, point2, initVal, range):

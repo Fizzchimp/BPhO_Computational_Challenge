@@ -9,6 +9,7 @@ class World():
         self.display = Display()
         self.lines = []
         self.points = []
+    
     # Task 1/2
     def basicProj(self, initPos, initVelocity, angle):
 
@@ -102,7 +103,7 @@ class World():
         pass
 
 
-    # Game Handling
+    # Program Handling
     def mousePos(self):
         pos = pg.mouse.get_pos()
         relPos = (pos[0] - G_POINT[0], pos[1] - G_POINT[1])
@@ -114,7 +115,7 @@ class World():
         mousePos = self.mousePos()
         for event in pg.event.get():
                 if event.type == pg.QUIT: self.running = False
-                 
+                
                 # Scroll Wheel Input
                 if event.type == pg.MOUSEWHEEL and mousePos != False:
                     if event.y == 1:
