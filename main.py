@@ -1,4 +1,4 @@
-from numpy import pi, sin, cos, sqrt, arctan, arcsin
+from numpy import pi, sin, cos, sqrt, arctan, arcsin, log
 import pygame as pg
 from display import Display, G_WIDTH, G_HEIGHT, G_POINT
 
@@ -98,9 +98,8 @@ class World():
 
 
     # Task 6
-    def findDistance(self, initPos, initVelocity):
+    def findDistance(self, initPos, initVelocity, angle):
         pass
-
 
 
     # Game Handling

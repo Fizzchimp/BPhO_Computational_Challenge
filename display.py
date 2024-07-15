@@ -77,11 +77,19 @@ class Display():
         if axisWidth >= 1:
             axisWidth = int(axisWidth)
             
-        # # Drawing the axes
-        pg.draw.line(self.graphSurf, (150, 150, 150), (centre[0], 0), (centre[0], G_HEIGHT), 3)
-        pg.draw.line(self.graphSurf, (150, 150, 150), (0, centre[1]), (G_WIDTH, centre[1]), 3)
+        # Drawing the axes
+        if 0 < centre[0] < G_WIDTH: pg.draw.line(self.graphSurf, (150, 150, 150), (centre[0], 0), (centre[0], G_HEIGHT), 3)
+        if 0 < centre[1] < G_HEIGHT: pg.draw.line(self.graphSurf, (150, 150, 150), (0, centre[1]), (G_WIDTH, centre[1]), 3)
 
-        
+        centreOffset = (centre[0] % (scale * axisWidth), centre[1] % (scale * axisWidth))
+        for i in range(5):
+            x = centreOffset[0] + axisWidth * scale * i
+            pg.draw.line(self.graphSurf, (150, 150, 150), (x, 0), (x, G_HEIGHT))
+           
+        for i in range(3):
+            y = centreOffset[1] + axisWidth * scale * i
+            pg.draw.line(self.graphSurf, (150, 150, 150), (0, y), (G_WIDTH, y))
+
         i = 1
         while True:
             x = centre[0] + i * axisWidth * scale
@@ -91,7 +99,7 @@ class Display():
 
             if x > G_WIDTH:
                 break
-            pg.draw.line(self.graphSurf, (150, 150, 150), (x, 0), (x, G_HEIGHT))
+            #pg.draw.line(self.graphSurf, (150, 150, 150), (x, 0), (x, G_HEIGHT))
             i += 1
         
         i = 1
@@ -103,7 +111,7 @@ class Display():
             
             if x < 0:
                 break
-            pg.draw.line(self.graphSurf, (150, 150, 150), (x, 0), (x, G_HEIGHT))
+            #pg.draw.line(self.graphSurf, (150, 150, 150), (x, 0), (x, G_HEIGHT))
             i += 1
 
         i = 1
@@ -114,7 +122,7 @@ class Display():
             self.graphSurf.blit(textSurf, (centre[0] - textSurf.get_size()[0] - 3, y))
             if y > G_HEIGHT:
                 break
-            pg.draw.line(self.graphSurf, (150, 150, 150), (0, y), (G_WIDTH, y))
+            #pg.draw.line(self.graphSurf, (150, 150, 150), (0, y), (G_WIDTH, y))
             i += 1
 
         i = 1
@@ -127,7 +135,7 @@ class Display():
             if y < 0:
                 break
             text = str(-i * axisWidth)
-            pg.draw.line(self.graphSurf, (150, 150, 150), (0, y), (G_WIDTH, y))
+            # pg.draw.line(self.graphSurf, (150, 150, 150), (0, y), (G_WIDTH, y))
             i += 1
             
         self.graphSurf.blit(self.graphFont.render("0", True, (100, 100, 100)), (centre[0] - 12, centre[1]))
