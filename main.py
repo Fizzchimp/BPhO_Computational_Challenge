@@ -1,12 +1,13 @@
-from re import S
 from numpy import pi, sin, cos, sqrt, arctan, arcsin, log
 import pygame as pg
+pg.init()
 from display import Display, G_WIDTH, G_HEIGHT, G_POINT
 
+
 gravity = 9.81
+
 class World():
     def __init__(self):
-        pg.init()
         self.display = Display()
         self.lines = []
         self.points = []
@@ -134,16 +135,21 @@ class World():
                         self.display.graphCentre = [G_WIDTH // 2 - difference[0] / 1.125, G_HEIGHT // 2 - difference[1] / 1.125]
 
                 # Mouse Button Inputs
-                if event.type == pg.MOUSEBUTTONDOWN and mousePos != False:
-                    self.mouseTracking = True
-                    pg.mouse.get_rel()
-                    
-                else:
-                    # Slider Tracking
+                if event.type == pg.MOUSEBUTTONDOWN:
+                    if mousePos != False:
+                        self.mouseTracking = True
+                        pg.mouse.get_rel()
+                        
+                    else:
+                        # Slider Tracking
+                        for slider in self.display.sliders:
+                            slider.getTracking(pg.mouse.get_pos())
+
+
+                if event.type == pg.MOUSEBUTTONUP:
+                    self.mouseTracking = False
                     for slider in self.display.sliders:
-                        if slider.inTrackingArea(mousePos):
-                            slider.moveSlider(mousePos[0])
-                if event.type == pg.MOUSEBUTTONUP: self.mouseTracking = False
+                        slider.tracking = False
 
                 # Keyboard Inputs
                 if event.type == pg.KEYDOWN:
@@ -153,33 +159,44 @@ class World():
             displacement = pg.mouse.get_rel()
             self.display.graphCentre[0] += displacement[0]
             self.display.graphCentre[1] += displacement[1]
+        
+        for slider in self.display.sliders:
+            if slider.tracking:
+                slider.moveSlider(pg.mouse.get_pos()[0])
 
     def run(self):
         self.running = True
         self.mouseTracking = False
         while self.running:
+            self.lines = []
+            self.points = []
             
             self.doEvents()
+
+            line, apogee = self.basicProj((0, 0), self.display.sliders[1].value, self.display.sliders[0].value / 180 * pi)
+            self.lines.append(line)
+            self.points.append(apogee)
+
             self.display.drawScreen(self.lines, self.points)
 
 world = World()
 
-point1 = (0, 0)
-point2 = (10, 10)
+# point1 = (0, 0)
+# point2 = (10, 10)
 
-line = world.basicProj(point1, 10, 45 / 180 * pi)[0]
-world.lines.append(line)
+# line = world.basicProj(point1, 10, 45 / 180 * pi)[0]
+# world.lines.append(line)
 
-boundParabola = world.boundParabola(point1, 10)
-world.lines.append(boundParabola)
-world.points.append(point1)
-world.points.append(point2)
+# boundParabola = world.boundParabola(point1, 10)
+# world.lines.append(boundParabola)
+# world.points.append(point1)
+# world.points.append(point2)
 
-line1, line2 = world.twoPoints(point1, point2, 20)
-world.lines.append(line1)
-world.lines.append(line2)
+# line1, line2 = world.twoPoints(point1, point2, 20)
+# world.lines.append(line1)
+# world.lines.append(line2)
 
-minVel = world.minVelocity(point1, point2)[0]
-world.lines.append(minVel)
+# minVel = world.minVelocity(point1, point2)[0]
+# world.lines.append(minVel)
 
 world.run()

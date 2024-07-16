@@ -11,6 +11,8 @@ G_POINT = (25, 25)
 
 AXES_SCALES = (1, 2, 5)
 
+SLIDER_FONT = pg.font.SysFont("arial", 17)
+
 class Display():
     def __init__(self):
         self.graphFont = pg.font.SysFont("arial", 17)
@@ -21,15 +23,16 @@ class Display():
         self.graphZoom = 30
         self.graphCentre = [G_WIDTH / 6, 5 * G_HEIGHT / 6]
         
-        self.angleSlider = Slider(700, 1075, 100, 45, 90)
+        self.sliders = [Slider(700, 1075, 100, 45, 90, 0.5, "Angle: ___°"),
+                        Slider(700, 1075, 150, 10, 200, 1, "Velocity:  ___m/s")]
 
 
     def drawScreen(self, lines, points):
         self.screen.fill((150, 150, 175))
         self.drawGraph(lines, points)
         
-        
-        self.angleSlider.draw(self.screen)
+        for slider in self.sliders:
+            slider.draw(self.screen)
 
 
         pg.display.flip()
@@ -125,30 +128,41 @@ class Display():
             
 
 class Slider():
-    def __init__(self, xPos1, xPos2, yPos, initVal, valRange):
+    def __init__(self, xPos1, xPos2, yPos, initVal, valRange, step, label):
         
-        self.point1 = (xPos1, yPos)
-        self.point2 = (xPos2, yPos)
+        self.xPos1 = xPos1
+        self.xPos2 = xPos2
+        self.yPos = yPos
         self.length = xPos2 - xPos1
         
         self.range = valRange
+        self.step = step
         self.value = initVal
         
-        self.tracking
+        self.tracking = False
         
+        self.label = label
+
     def draw(self, surface):
-        pg.draw.line(surface, (100, 100, 120), self.point1, self.point2, 5)
-        pg.draw.circle(surface, (90, 70, 90), (self.point1[0] + self.value / self.range * self.length, self.point1[1]), 7)
+        pg.draw.line(surface, (100, 100, 120), (self.xPos1, self.yPos), (self.xPos2, self.yPos), 5)
+        pg.draw.circle(surface, (90, 70, 90), (self.xPos1 + self.value / self.range * self.length, self.yPos), 7)
         
+        labelSurf = SLIDER_FONT.render(self.label.replace("___", str(self.value)), True, (50, 50, 60))
+        surface.blit(labelSurf, (self.xPos1, self.yPos - 25))
     
     def moveSlider(self, mousePos):
-        if self.point1[0] <= mousePos <= self.point2[0]:
-            self.value = (mousePos - self.point1[0]) / self.length * self.range
+        if self.xPos1 <= mousePos <= self.xPos2:
+            self.value = ((mousePos - self.xPos1) / self.length * self.range)
+            self.value = self.value - (self.value % self.step)
+            if self.value % 1 == 0:
+                self.value = int(self.value)
             
-        if mousePos < self.point1[0]:
+        if mousePos < self.xPos1:
             self.value = 0
             
-        if self.point2[0] < mousePos:
+        if self.xPos2 < mousePos:
             self.value = self.range
-       
-       
+
+    def getTracking(self, mousePos):
+        if self.xPos1 - 7 <= mousePos[0] <= self.xPos2 + 7 and self.yPos - 7 <= mousePos[1] <= self.yPos + 7:
+            self.tracking = True
