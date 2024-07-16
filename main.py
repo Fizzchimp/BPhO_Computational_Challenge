@@ -1,3 +1,4 @@
+from re import S
 from numpy import pi, sin, cos, sqrt, arctan, arcsin, log
 import pygame as pg
 from display import Display, G_WIDTH, G_HEIGHT, G_POINT
@@ -113,18 +114,22 @@ class World():
         
     def doEvents(self):
         mousePos = self.mousePos()
+        gCentre = self.display.graphCentre
+        # PyGame input events
         for event in pg.event.get():
                 if event.type == pg.QUIT: self.running = False
                 
                 # Scroll Wheel Input
                 if event.type == pg.MOUSEWHEEL and mousePos != False:
                     if event.y == 1:
-                        difference = (mousePos[0] - self.display.graphCentre[0], mousePos[1] - self.display.graphCentre[1])
+                        difference = (mousePos[0] - gCentre[0], mousePos[1] - gCentre[1])
                         self.display.graphZoom /= 1.125
-                        self.display.graphCentre = [mousePos[0] - difference[0] * 1.125, mousePos[1] - difference[1] * 1.125]
+                        
+                        if not (gCentre[0] - 15 < mousePos[0] < gCentre[0] + 15 and gCentre[1] - 15 < mousePos[1] < gCentre[1] + 15):
+                            self.display.graphCentre = [mousePos[0] - difference[0] * 1.125, mousePos[1] - difference[1] * 1.125]
                         
                     if event.y == -1:
-                        difference = (G_WIDTH // 2 - self.display.graphCentre[0], G_HEIGHT // 2 - self.display.graphCentre[1])
+                        difference = (G_WIDTH // 2 - gCentre[0], G_HEIGHT // 2 - gCentre[1])
                         self.display.graphZoom *= 1.125
                         self.display.graphCentre = [G_WIDTH // 2 - difference[0] / 1.125, G_HEIGHT // 2 - difference[1] / 1.125]
 
@@ -132,12 +137,17 @@ class World():
                 if event.type == pg.MOUSEBUTTONDOWN and mousePos != False:
                     self.mouseTracking = True
                     pg.mouse.get_rel()
+                    
+                else:
+                    # Slider Tracking
+                    for slider in self.display.sliders:
+                        if slider.inTrackingArea(mousePos):
+                            slider.moveSlider(mousePos[0])
                 if event.type == pg.MOUSEBUTTONUP: self.mouseTracking = False
 
                 # Keyboard Inputs
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_ESCAPE: self.running = False
-
 
         if self.mouseTracking:
             displacement = pg.mouse.get_rel()

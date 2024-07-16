@@ -20,11 +20,16 @@ class Display():
         self.graphPoint = G_POINT
         self.graphZoom = 30
         self.graphCentre = [G_WIDTH / 6, 5 * G_HEIGHT / 6]
+        
+        self.angleSlider = Slider(700, 1075, 100, 45, 90)
 
 
     def drawScreen(self, lines, points):
         self.screen.fill((150, 150, 175))
         self.drawGraph(lines, points)
+        
+        
+        self.angleSlider.draw(self.screen)
 
 
         pg.display.flip()
@@ -120,20 +125,30 @@ class Display():
             
 
 class Slider():
-    def __init__(self, point1, point2, initVal, range):
+    def __init__(self, xPos1, xPos2, yPos, initVal, valRange):
         
-        self.point1
-        self.point2
+        self.point1 = (xPos1, yPos)
+        self.point2 = (xPos2, yPos)
+        self.length = xPos2 - xPos1
         
-        self.lineVect = (point1[0] - point2[0], point1[1] - point2[1])
+        self.range = valRange
+        self.value = initVal
         
-        self.val = initVal
-        self.range = range
-        
-    #def getPos(self, mousePos):
-        
+        self.tracking
         
     def draw(self, surface):
-        percentageAlong = self.val / self.range
-        pg.draw.line(surface, (150, 150, 150), self.point1, self.point2, 5)
-        pg.draw.circle(surface, (50, 50, 50), (self.point1[0] + self.lineVect[0] * percentageAlong, self.point1[1] + self.lineVect[1] * percentageAlong))
+        pg.draw.line(surface, (100, 100, 120), self.point1, self.point2, 5)
+        pg.draw.circle(surface, (90, 70, 90), (self.point1[0] + self.value / self.range * self.length, self.point1[1]), 7)
+        
+    
+    def moveSlider(self, mousePos):
+        if self.point1[0] <= mousePos <= self.point2[0]:
+            self.value = (mousePos - self.point1[0]) / self.length * self.range
+            
+        if mousePos < self.point1[0]:
+            self.value = 0
+            
+        if self.point2[0] < mousePos:
+            self.value = self.range
+       
+       
