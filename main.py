@@ -6,6 +6,13 @@ from display import Display, G_WIDTH, G_HEIGHT, G_POINT
 
 gravity = 9.81
 
+
+class Line():
+    def __init__(self):
+        pass
+
+
+
 class World():
     def __init__(self):
         self.display = Display()
