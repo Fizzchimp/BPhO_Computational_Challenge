@@ -24,7 +24,8 @@ class Display():
         self.graphCentre = [G_WIDTH / 6, 5 * G_HEIGHT / 6]
         
         self.sliders = [Slider(700, 1075, 100, 45, 90, 0.5, "Angle: ___°"),
-                        Slider(700, 1075, 150, 10, 50, 0.25, "Velocity:  ___m/s")]
+                        Slider(700, 1075, 150, 10, 50, 0.0625, "Velocity:  ___m/s"),
+                        Slider(700, 1075, 200, 9.81, 20, 0.0625, "Gravity:  ___N/Kg")]
 
 
     def drawScreen(self, lines, points):
@@ -48,13 +49,14 @@ class Display():
         self.drawAxes(scale)
 
         # Drawing any lines
-        for l_points in lines:
+        for line in lines:
+            l_points = line.points
             for i in range(len(l_points) - 1):
                 point1 = (centre[0] + l_points[i][0] * scale,
                         centre[1] - l_points[i][1] * scale)
 
                 point2 = (centre[0] + l_points[i + 1][0] * scale,
-                        centre[1] - l_points[i + 1][1] * scale)
+                          centre[1] - l_points[i + 1][1] * scale)
                 pg.draw.aaline(self.graphSurf, (0, 0, 0), point1, point2)
 
         # Drawing any points

@@ -1,10 +1,9 @@
+from distutils.ccompiler import gen_lib_options
 from numpy import pi, sin, cos, sqrt, arctan, arcsin, log
 import pygame as pg
 pg.init()
 from display import Display, G_WIDTH, G_HEIGHT, G_POINT
 
-
-gravity = 9.81
 
 class Point():
     def __init__(self, pos, colour, label):
@@ -14,8 +13,8 @@ class Point():
         self.label = label
 
 class Line():
-    def __init__(self, points, initPos, endPos, apogee):
-        self.linePoints = points
+    def __init__(self, points, initPos, endPos, apogee, label):
+        self.points = points
         
         self.startPoint = initPos
         self.endPoint = endPos
@@ -29,10 +28,12 @@ class World():
         self.display = Display()
         self.lines = []
         self.points = []
+        global gravity
+        gravity = 9.81
     
     # Task 1/2
     def basicProj(self, initPos, initVelocity, angle):
-
+        print(gravity)
         xVel = initVelocity * cos(angle)
         yVel = initVelocity * sin(angle)
 
@@ -57,15 +58,16 @@ class World():
 
         # Finding the apogee
         maxTime = -yVel / yAcc
-        apogee = Point((xVel * maxTime + 0.5 * xAcc * maxTime ** 2, yVel * maxTime + 0.5 * yAcc * maxTime ** 2 + initPos[1]), "Apogee")
+        apogee = Point((xVel * maxTime + 0.5 * xAcc * maxTime ** 2, yVel * maxTime + 0.5 * yAcc * maxTime ** 2 + initPos[1]), (100, 70, 70), "Apogee")
         
-        startPoint = Point(initPos, "Start")
+        startPoint = Point(initPos, (70, 70, 100), "Start")
         
         endTime = (2 * initVelocity * sin(angle)) / gravity
-        endPoint = Point((initVelocity * cos(angle) * endTime, 0))
-        points.append(endPoint)
+        endPos = (initVelocity * cos(angle) * endTime, 0)
+        endPoint = Point(endPos, (70, 70, 100), "end")
+        points.append(endPos)
         
-        line = Line()
+        return Line(points, startPoint, endPoint, apogee, "Line")
 
     # Task 3
     def twoPoints(self, point1, point2, initVelocity):
@@ -149,7 +151,7 @@ class World():
                         difference = (mousePos[0] - gCentre[0], mousePos[1] - gCentre[1])
                         self.display.graphZoom /= 1.125
                         
-                        if not (gCentre[0] - 15 < mousePos[0] < gCentre[0] + 15 and gCentre[1] - 15 < mousePos[1] < gCentre[1] + 15):
+                        if not (gCentre[0] - 25 < mousePos[0] < gCentre[0] + 25 and gCentre[1] - 25 < mousePos[1] < gCentre[1] + 25):
                             self.display.graphCentre = [mousePos[0] - difference[0] * 1.125, mousePos[1] - difference[1] * 1.125]
                         
                     if event.y == -1:
@@ -193,13 +195,12 @@ class World():
         while self.running:
             self.lines = []
             self.points = []
+            global gravity
+            gravity = self.display.sliders[2].value
             
             self.doEvents()
-
-            line, apogee = self.basicProj((0, 0), self.display.sliders[1].value, self.display.sliders[0].value / 180 * pi)
+            line = self.basicProj((0, 0), self.display.sliders[1].value, self.display.sliders[0].value / 180 * pi)
             self.lines.append(line)
-            self.points.append(apogee)
-
             self.display.drawScreen(self.lines, self.points)
 
 world = World()
