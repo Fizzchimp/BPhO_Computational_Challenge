@@ -6,10 +6,21 @@ from display import Display, G_WIDTH, G_HEIGHT, G_POINT
 
 gravity = 9.81
 
+class Point():
+    def __init__(self, pos, colour, label):
+        self.pos = pos
+        self.colour = colour
+        
+        self.label = label
 
 class Line():
-    def __init__(self):
-        pass
+    def __init__(self, points, initPos, endPos, apogee):
+        self.linePoints = points
+        
+        self.startPoint = initPos
+        self.endPoint = endPos
+        
+        self.apogee = apogee
 
 
 
@@ -35,21 +46,26 @@ class World():
         i = 0
         points = []
         while y >= 0:
+            points.append((x, y))
+            
             x += xDif
             t = (x - initPos[0]) / xVel
             y = (yVel * t)  + (0.5 * yAcc * (t ** 2)) + initPos[1]
-
-            points.append((x, y))
 
             i += 1
     
 
         # Finding the apogee
         maxTime = -yVel / yAcc
-        apogee = (xVel * maxTime + 0.5 * xAcc * maxTime ** 2, yVel * maxTime + 0.5 * yAcc * maxTime ** 2 + initPos[1])
-
-        return points, apogee
-
+        apogee = Point((xVel * maxTime + 0.5 * xAcc * maxTime ** 2, yVel * maxTime + 0.5 * yAcc * maxTime ** 2 + initPos[1]), "Apogee")
+        
+        startPoint = Point(initPos, "Start")
+        
+        endTime = (2 * initVelocity * sin(angle)) / gravity
+        endPoint = Point((initVelocity * cos(angle) * endTime, 0))
+        points.append(endPoint)
+        
+        line = Line()
 
     # Task 3
     def twoPoints(self, point1, point2, initVelocity):

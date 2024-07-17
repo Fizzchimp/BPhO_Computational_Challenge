@@ -24,7 +24,7 @@ class Display():
         self.graphCentre = [G_WIDTH / 6, 5 * G_HEIGHT / 6]
         
         self.sliders = [Slider(700, 1075, 100, 45, 90, 0.5, "Angle: ___°"),
-                        Slider(700, 1075, 150, 10, 200, 1, "Velocity:  ___m/s")]
+                        Slider(700, 1075, 150, 10, 50, 0.25, "Velocity:  ___m/s")]
 
 
     def drawScreen(self, lines, points):
