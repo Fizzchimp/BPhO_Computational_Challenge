@@ -4,12 +4,14 @@ from numpy import sin, cos, pi, log10
 WIDTH = 1100
 HEIGHT = 700
 
-G_WIDTH = 650
-G_HEIGHT = 650
+G_WIDTH = 620
+G_HEIGHT = 620
 
 G_POINT = (25, 25)
 
 AXES_SCALES = (1, 2, 5)
+
+SCREEN_FONT = pg.font.SysFont("arial", 17)
 
 SLIDER_FONT = pg.font.SysFont("arial", 17)
 
@@ -28,14 +30,15 @@ class Display():
                         Slider(700, 1075, 200, 9.81, 20, 0.0625, "Gravity:  ___N/Kg")]
 
 
-    def drawScreen(self, lines, points):
+    def drawScreen(self, lines, points, mousePos):
         self.screen.fill((150, 150, 175))
         self.drawGraph(lines, points)
         
         for slider in self.sliders:
             slider.draw(self.screen)
 
-
+        SCREEN_FONT.render(self.screen, f"{mousePos[0]}, {mousePos[1]}", G_POINT[0] + G_WIDTH + 5)
+        
         pg.display.flip()
 
     def drawGraph(self, lines, points):

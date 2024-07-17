@@ -28,12 +28,9 @@ class World():
         self.display = Display()
         self.lines = []
         self.points = []
-        global gravity
-        gravity = 9.81
     
     # Task 1/2
     def basicProj(self, initPos, initVelocity, angle):
-        print(gravity)
         xVel = initVelocity * cos(angle)
         yVel = initVelocity * sin(angle)
 
@@ -190,18 +187,19 @@ class World():
                 slider.moveSlider(pg.mouse.get_pos()[0])
 
     def run(self):
+        global gravity
         self.running = True
         self.mouseTracking = False
         while self.running:
             self.lines = []
             self.points = []
-            global gravity
             gravity = self.display.sliders[2].value
             
             self.doEvents()
             line = self.basicProj((0, 0), self.display.sliders[1].value, self.display.sliders[0].value / 180 * pi)
             self.lines.append(line)
-            self.display.drawScreen(self.lines, self.points)
+            
+            self.display.drawScreen(self.lines, self.points, s)
 
 world = World()
 
