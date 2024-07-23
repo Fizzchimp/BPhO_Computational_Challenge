@@ -25,6 +25,8 @@ class Display():
         
         self.sliders = [Slider(700, 1075, 100, 45, 90, 0.5, "Angle: ___°"),
                         Slider(700, 1075, 150, 10, 200, 1, "Velocity:  ___m/s")]
+        
+        self.checkBoxes = [CheckBox((700, 200), "CheckBox")]
 
 
     def drawScreen(self, lines, points):
@@ -33,6 +35,9 @@ class Display():
         
         for slider in self.sliders:
             slider.draw(self.screen)
+
+        for checkBox in self.checkBoxes:
+            checkBox.draw(self.screen)
 
 
         pg.display.flip()
@@ -166,3 +171,22 @@ class Slider():
     def getTracking(self, mousePos):
         if self.xPos1 - 7 <= mousePos[0] <= self.xPos2 + 7 and self.yPos - 7 <= mousePos[1] <= self.yPos + 7:
             self.tracking = True
+
+
+
+class CheckBox():
+    def __init__(self, pos, label, startState = False):
+        self.label = label
+        self.pos = pos
+        self.state = startState
+
+    def draw(self, surface):
+        pg.draw.rect(surface, (100, 100, 100), pg.Rect(self.pos[0] - 7, self.pos[1] - 7, 14, 14))
+        if not self.state:
+            pg.draw.rect(surface, (200, 200, 200), pg.Rect(self.pos[0] - 6, self.pos[1] - 6, 12, 12))
+            
+
+    def inHitbox(self, mousePos):
+        if self.pos[0] - 7 <= mousePos[0] <= self.pos[0] + 7 and self.pos[1] - 7 <= mousePos[1] <= self.pos[1] + 7:
+                if self.state: self.state = False
+                else: self.state = True

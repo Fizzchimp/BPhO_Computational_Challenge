@@ -108,6 +108,24 @@ class World():
 
 
     # Task 6
+    def approxDist(self, initPos, initVelocity, angle):
+        y = initPos[1]
+        x = initPos[0]
+        dt = 0.1
+        time = 0
+        dist = 0
+        while y >= 0:
+            newX = initVelocity * cos(angle) * time
+            newY = initVelocity * sin(angle) * time + 0.5 * -gravity * (time ** 2)
+            
+            dist += sqrt((newX - x) ** 2 + (newY - y) ** 2)
+            time += dt
+            x = newX
+            y = newY
+
+        return dist
+    
+
     def findDistance(self, initPos, initVelocity, angle):
         pass
 
@@ -121,20 +139,21 @@ class World():
         else: return False
         
     def doEvents(self):
-        mousePos = self.mousePos()
+        relMousePos = self.mousePos()
+        mousePos = pg.mouse.get_pos()
         gCentre = self.display.graphCentre
         # PyGame input events
         for event in pg.event.get():
                 if event.type == pg.QUIT: self.running = False
                 
                 # Scroll Wheel Input
-                if event.type == pg.MOUSEWHEEL and mousePos != False:
+                if event.type == pg.MOUSEWHEEL and relMousePos != False:
                     if event.y == 1:
-                        difference = (mousePos[0] - gCentre[0], mousePos[1] - gCentre[1])
+                        difference = (relMousePos[0] - gCentre[0], relMousePos[1] - gCentre[1])
                         self.display.graphZoom /= 1.125
                         
-                        if not (gCentre[0] - 15 < mousePos[0] < gCentre[0] + 15 and gCentre[1] - 15 < mousePos[1] < gCentre[1] + 15):
-                            self.display.graphCentre = [mousePos[0] - difference[0] * 1.125, mousePos[1] - difference[1] * 1.125]
+                        if not (gCentre[0] - 15 < relMousePos[0] < gCentre[0] + 15 and gCentre[1] - 15 < relMousePos[1] < gCentre[1] + 15):
+                            self.display.graphCentre = [relMousePos[0] - difference[0] * 1.125, relMousePos[1] - difference[1] * 1.125]
                         
                     if event.y == -1:
                         difference = (G_WIDTH // 2 - gCentre[0], G_HEIGHT // 2 - gCentre[1])
@@ -143,14 +162,18 @@ class World():
 
                 # Mouse Button Inputs
                 if event.type == pg.MOUSEBUTTONDOWN:
-                    if mousePos != False:
+                    if relMousePos != False:
                         self.mouseTracking = True
                         pg.mouse.get_rel()
                         
                     else:
                         # Slider Tracking
                         for slider in self.display.sliders:
-                            slider.getTracking(pg.mouse.get_pos())
+                            slider.getTracking(mousePos)
+
+                        # CheckBox Detection
+                        for checkBox in self.display.checkBoxes:
+                            checkBox.inHitbox(mousePos)
 
 
                 if event.type == pg.MOUSEBUTTONUP:
@@ -179,20 +202,19 @@ class World():
             self.points = []
             
             self.doEvents()
+            angle =  self.display.sliders[0].value / 180 * pi
+            velocity = self.display.sliders[1].value
+            point1 = (0, 0)
 
-            line, apogee = self.basicProj((0, 0), self.display.sliders[1].value, self.display.sliders[0].value / 180 * pi)
+            line, apogee = self.basicProj(point1, velocity, angle)
+            print(world.approxDist(point1, velocity, angle))
+
             self.lines.append(line)
             self.points.append(apogee)
 
             self.display.drawScreen(self.lines, self.points)
 
 world = World()
-
-# point1 = (0, 0)
-# point2 = (10, 10)
-
-# line = world.basicProj(point1, 10, 45 / 180 * pi)[0]
-# world.lines.append(line)
 
 # boundParabola = world.boundParabola(point1, 10)
 # world.lines.append(boundParabola)
