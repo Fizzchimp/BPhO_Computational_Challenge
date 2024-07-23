@@ -167,13 +167,8 @@ class World():
                         difference = (relMousePos[0] - gCentre[0], relMousePos[1] - gCentre[1])
                         self.display.graphZoom /= 1.125
                         
-<<<<<<< HEAD
-                        if not (gCentre[0] - 15 < relMousePos[0] < gCentre[0] + 15 and gCentre[1] - 15 < relMousePos[1] < gCentre[1] + 15):
-                            self.display.graphCentre = [relMousePos[0] - difference[0] * 1.125, relMousePos[1] - difference[1] * 1.125]
-=======
                         if not (gCentre[0] - 25 < mousePos[0] < gCentre[0] + 25 and gCentre[1] - 25 < mousePos[1] < gCentre[1] + 25):
                             self.display.graphCentre = [mousePos[0] - difference[0] * 1.125, mousePos[1] - difference[1] * 1.125]
->>>>>>> dbfc192f6a23b73bf323194bb1bd84a2e6d71a3f
                         
                     if event.y == -1:
                         difference = (G_WIDTH // 2 - gCentre[0], G_HEIGHT // 2 - gCentre[1])
@@ -224,7 +219,6 @@ class World():
             gravity = self.display.sliders[2].value
             
             self.doEvents()
-<<<<<<< HEAD
             angle =  self.display.sliders[0].value / 180 * pi
             velocity = self.display.sliders[1].value
             point1 = (0, 0)
@@ -232,9 +226,7 @@ class World():
             line, apogee = self.basicProj(point1, velocity, angle)
             print(world.approxDist(point1, velocity, angle))
 
-=======
             line = self.basicProj((0, 0), self.display.sliders[1].value, self.display.sliders[0].value / 180 * pi)
->>>>>>> dbfc192f6a23b73bf323194bb1bd84a2e6d71a3f
             self.lines.append(line)
             
             self.display.drawScreen(self.lines, self.points, s)
