@@ -1,15 +1,25 @@
+from distutils.ccompiler import gen_lib_options
 from numpy import pi, sin, cos, sqrt, arctan, arcsin, log
 import pygame as pg
 pg.init()
 from display import Display, G_WIDTH, G_HEIGHT, G_POINT
 
 
-gravity = 9.81
-
+class Point():
+    def __init__(self, pos, colour, label):
+        self.pos = pos
+        self.colour = colour
+        
+        self.label = label
 
 class Line():
-    def __init__(self):
-        pass
+    def __init__(self, points, initPos, endPos, apogee, label):
+        self.points = points
+        
+        self.startPoint = initPos
+        self.endPoint = endPos
+        
+        self.apogee = apogee
 
 
 
@@ -21,7 +31,6 @@ class World():
     
     # Task 1/2
     def basicProj(self, initPos, initVelocity, angle):
-
         xVel = initVelocity * cos(angle)
         yVel = initVelocity * sin(angle)
 
@@ -35,21 +44,27 @@ class World():
         i = 0
         points = []
         while y >= 0:
+            points.append((x, y))
+            
             x += xDif
             t = (x - initPos[0]) / xVel
             y = (yVel * t)  + (0.5 * yAcc * (t ** 2)) + initPos[1]
-
-            points.append((x, y))
 
             i += 1
     
 
         # Finding the apogee
         maxTime = -yVel / yAcc
-        apogee = (xVel * maxTime + 0.5 * xAcc * maxTime ** 2, yVel * maxTime + 0.5 * yAcc * maxTime ** 2 + initPos[1])
-
-        return points, apogee
-
+        apogee = Point((xVel * maxTime + 0.5 * xAcc * maxTime ** 2, yVel * maxTime + 0.5 * yAcc * maxTime ** 2 + initPos[1]), (100, 70, 70), "Apogee")
+        
+        startPoint = Point(initPos, (70, 70, 100), "Start")
+        
+        endTime = (2 * initVelocity * sin(angle)) / gravity
+        endPos = (initVelocity * cos(angle) * endTime, 0)
+        endPoint = Point(endPos, (70, 70, 100), "end")
+        points.append(endPos)
+        
+        return Line(points, startPoint, endPoint, apogee, "Line")
 
     # Task 3
     def twoPoints(self, point1, point2, initVelocity):
@@ -152,8 +167,13 @@ class World():
                         difference = (relMousePos[0] - gCentre[0], relMousePos[1] - gCentre[1])
                         self.display.graphZoom /= 1.125
                         
+<<<<<<< HEAD
                         if not (gCentre[0] - 15 < relMousePos[0] < gCentre[0] + 15 and gCentre[1] - 15 < relMousePos[1] < gCentre[1] + 15):
                             self.display.graphCentre = [relMousePos[0] - difference[0] * 1.125, relMousePos[1] - difference[1] * 1.125]
+=======
+                        if not (gCentre[0] - 25 < mousePos[0] < gCentre[0] + 25 and gCentre[1] - 25 < mousePos[1] < gCentre[1] + 25):
+                            self.display.graphCentre = [mousePos[0] - difference[0] * 1.125, mousePos[1] - difference[1] * 1.125]
+>>>>>>> dbfc192f6a23b73bf323194bb1bd84a2e6d71a3f
                         
                     if event.y == -1:
                         difference = (G_WIDTH // 2 - gCentre[0], G_HEIGHT // 2 - gCentre[1])
@@ -195,13 +215,16 @@ class World():
                 slider.moveSlider(pg.mouse.get_pos()[0])
 
     def run(self):
+        global gravity
         self.running = True
         self.mouseTracking = False
         while self.running:
             self.lines = []
             self.points = []
+            gravity = self.display.sliders[2].value
             
             self.doEvents()
+<<<<<<< HEAD
             angle =  self.display.sliders[0].value / 180 * pi
             velocity = self.display.sliders[1].value
             point1 = (0, 0)
@@ -209,10 +232,12 @@ class World():
             line, apogee = self.basicProj(point1, velocity, angle)
             print(world.approxDist(point1, velocity, angle))
 
+=======
+            line = self.basicProj((0, 0), self.display.sliders[1].value, self.display.sliders[0].value / 180 * pi)
+>>>>>>> dbfc192f6a23b73bf323194bb1bd84a2e6d71a3f
             self.lines.append(line)
-            self.points.append(apogee)
-
-            self.display.drawScreen(self.lines, self.points)
+            
+            self.display.drawScreen(self.lines, self.points, s)
 
 world = World()
 

@@ -4,12 +4,14 @@ from numpy import sin, cos, pi, log10
 WIDTH = 1100
 HEIGHT = 700
 
-G_WIDTH = 650
-G_HEIGHT = 650
+G_WIDTH = 620
+G_HEIGHT = 620
 
 G_POINT = (25, 25)
 
 AXES_SCALES = (1, 2, 5)
+
+SCREEN_FONT = pg.font.SysFont("arial", 17)
 
 SLIDER_FONT = pg.font.SysFont("arial", 17)
 
@@ -24,22 +26,19 @@ class Display():
         self.graphCentre = [G_WIDTH / 6, 5 * G_HEIGHT / 6]
         
         self.sliders = [Slider(700, 1075, 100, 45, 90, 0.5, "Angle: ___°"),
-                        Slider(700, 1075, 150, 10, 200, 1, "Velocity:  ___m/s")]
-        
-        self.checkBoxes = [CheckBox((700, 200), "CheckBox")]
+                        Slider(700, 1075, 150, 10, 50, 0.0625, "Velocity:  ___m/s"),
+                        Slider(700, 1075, 200, 9.81, 20, 0.0625, "Gravity:  ___N/Kg")]
 
 
-    def drawScreen(self, lines, points):
+    def drawScreen(self, lines, points, mousePos):
         self.screen.fill((150, 150, 175))
         self.drawGraph(lines, points)
         
         for slider in self.sliders:
             slider.draw(self.screen)
 
-        for checkBox in self.checkBoxes:
-            checkBox.draw(self.screen)
-
-
+        SCREEN_FONT.render(self.screen, f"{mousePos[0]}, {mousePos[1]}", G_POINT[0] + G_WIDTH + 5)
+        
         pg.display.flip()
 
     def drawGraph(self, lines, points):
@@ -53,13 +52,14 @@ class Display():
         self.drawAxes(scale)
 
         # Drawing any lines
-        for l_points in lines:
+        for line in lines:
+            l_points = line.points
             for i in range(len(l_points) - 1):
                 point1 = (centre[0] + l_points[i][0] * scale,
                         centre[1] - l_points[i][1] * scale)
 
                 point2 = (centre[0] + l_points[i + 1][0] * scale,
-                        centre[1] - l_points[i + 1][1] * scale)
+                          centre[1] - l_points[i + 1][1] * scale)
                 pg.draw.aaline(self.graphSurf, (0, 0, 0), point1, point2)
 
         # Drawing any points
