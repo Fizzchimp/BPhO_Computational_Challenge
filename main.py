@@ -1,5 +1,4 @@
-from distutils.ccompiler import gen_lib_options
-from numpy import pi, sin, cos, sqrt, arctan, arcsin, log
+from numpy import pi, sin, cos, tan, sqrt, arctan, arcsin
 import pygame as pg
 pg.init()
 from display import Display, G_WIDTH, G_HEIGHT, G_POINT
@@ -13,7 +12,7 @@ class Point():
         self.label = label
 
 class Line():
-    def __init__(self, points, initPos, endPos, apogee, label):
+    def __init__(self, points, label, initPos = None, endPos = None, apogee = None):
         self.points = points
         
         self.startPoint = initPos
@@ -40,7 +39,7 @@ class World():
         xDif = 0.1
         
         x = initPos[0]
-        y = 0
+        y = initPos[1]
         i = 0
         points = []
         while y >= 0:
@@ -59,12 +58,14 @@ class World():
         
         startPoint = Point(initPos, (70, 70, 100), "Start")
         
-        endTime = (2 * initVelocity * sin(angle)) / gravity
-        endPos = (initVelocity * cos(angle) * endTime, 0)
+        b = initVelocity * sin(angle)
+        endTime = (b + sqrt((b ** 2) - (2 * -gravity * initPos[1]))) / gravity
+
+        endPos = (initPos[0] + initVelocity * cos(angle) * endTime, 0)
         endPoint = Point(endPos, (70, 70, 100), "end")
         points.append(endPos)
         
-        return Line(points, startPoint, endPoint, apogee, "Line")
+        return Line(points, "Line", startPoint, endPoint, apogee)
 
     # Task 3
     def twoPoints(self, point1, point2, initVelocity):
@@ -119,19 +120,20 @@ class World():
                 break
             x += 0.1
 
-        return points
+        line = Line(points, "Bounding Parabola")
+        return line
 
 
     # Task 6
     def approxDist(self, initPos, initVelocity, angle):
         y = initPos[1]
         x = initPos[0]
-        dt = 0.1
+        dt = 0.001
         time = 0
         dist = 0
         while y >= 0:
-            newX = initVelocity * cos(angle) * time
-            newY = initVelocity * sin(angle) * time + 0.5 * -gravity * (time ** 2)
+            newX = initPos[0] + initVelocity * cos(angle) * time
+            newY = initPos[1] + initVelocity * sin(angle) * time + 0.5 * -gravity * (time ** 2)
             
             dist += sqrt((newX - x) ** 2 + (newY - y) ** 2)
             time += dt
@@ -142,11 +144,11 @@ class World():
     
 
     def findDistance(self, initPos, initVelocity, angle):
-        pass
-
+        z = lambda x: tan(angle) - (gravity * x) / (initVelocity ** 2) * (1 + tan(angle) ** 2)
+        s = (initVelocity ** 2) / (g * (1 + tan(angle) ** 2)) * 
 
     # Program Handling
-    def mousePos(self):
+    def relMousePos(self):
         pos = pg.mouse.get_pos()
         relPos = (pos[0] - G_POINT[0], pos[1] - G_POINT[1])
         if 0 <= relPos[0] <= G_WIDTH and 0 <= relPos[1] <= G_HEIGHT:
@@ -154,9 +156,10 @@ class World():
         else: return False
         
     def doEvents(self):
-        relMousePos = self.mousePos()
+        relMousePos = self.relMousePos()
         mousePos = pg.mouse.get_pos()
         gCentre = self.display.graphCentre
+
         # PyGame input events
         for event in pg.event.get():
                 if event.type == pg.QUIT: self.running = False
@@ -167,8 +170,8 @@ class World():
                         difference = (relMousePos[0] - gCentre[0], relMousePos[1] - gCentre[1])
                         self.display.graphZoom /= 1.125
                         
-                        if not (gCentre[0] - 25 < mousePos[0] < gCentre[0] + 25 and gCentre[1] - 25 < mousePos[1] < gCentre[1] + 25):
-                            self.display.graphCentre = [mousePos[0] - difference[0] * 1.125, mousePos[1] - difference[1] * 1.125]
+                        if not (gCentre[0] - 25 < relMousePos[0] < gCentre[0] + 25 and gCentre[1] - 25 < relMousePos[1] < gCentre[1] + 25):
+                            self.display.graphCentre = [relMousePos[0] - difference[0] * 1.125, relMousePos[1] - difference[1] * 1.125]
                         
                     if event.y == -1:
                         difference = (G_WIDTH // 2 - gCentre[0], G_HEIGHT // 2 - gCentre[1])
@@ -184,7 +187,8 @@ class World():
                     else:
                         # Slider Tracking
                         for slider in self.display.sliders:
-                            slider.getTracking(mousePos)
+                            if slider.active:
+                                slider.getTracking(mousePos)
 
                         # CheckBox Detection
                         for checkBox in self.display.checkBoxes:
@@ -216,25 +220,32 @@ class World():
         while self.running:
             self.lines = []
             self.points = []
+            if self.display.checkBoxes[1].state:
+                self.display.sliders[2].value = 9.81
+                self.display.sliders[2].active = False
+            else:
+                self.display.sliders[2].active = True
             gravity = self.display.sliders[2].value
             
             self.doEvents()
             angle =  self.display.sliders[0].value / 180 * pi
             velocity = self.display.sliders[1].value
-            point1 = (0, 0)
+            point1 = (0, 2)
 
-            line, apogee = self.basicProj(point1, velocity, angle)
-            print(world.approxDist(point1, velocity, angle))
+            if self.display.checkBoxes[0].state:
+                boundParabola = world.boundParabola(point1, velocity)
+                world.lines.append(boundParabola)
+            
 
-            line = self.basicProj((0, 0), self.display.sliders[1].value, self.display.sliders[0].value / 180 * pi)
+            line = self.basicProj(point1, velocity, angle)
+            # print(world.approxDist(point1, velocity, angle))
+
             self.lines.append(line)
             
-            self.display.drawScreen(self.lines, self.points, s)
+            self.display.drawScreen(self.lines, self.points, self.relMousePos())
 
 world = World()
 
-# boundParabola = world.boundParabola(point1, 10)
-# world.lines.append(boundParabola)
 # world.points.append(point1)
 # world.points.append(point2)
 

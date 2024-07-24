@@ -1,5 +1,5 @@
 import pygame as pg
-from numpy import sin, cos, pi, log10
+from numpy import round, log10
 
 WIDTH = 1100
 HEIGHT = 700
@@ -13,7 +13,7 @@ AXES_SCALES = (1, 2, 5)
 
 SCREEN_FONT = pg.font.SysFont("arial", 17)
 
-SLIDER_FONT = pg.font.SysFont("arial", 17)
+UI_FONT = pg.font.SysFont("arial", 17)
 
 class Display():
     def __init__(self):
@@ -28,16 +28,35 @@ class Display():
         self.sliders = [Slider(700, 1075, 100, 45, 90, 0.5, "Angle: ___°"),
                         Slider(700, 1075, 150, 10, 50, 0.0625, "Velocity:  ___m/s"),
                         Slider(700, 1075, 200, 9.81, 20, 0.0625, "Gravity:  ___N/Kg")]
+        
+        self.checkBoxes = [CheckBox((710, 300), "Bounding Parabola"),
+                           CheckBox((900, 300), "Earth Gravity", True)]
 
 
-    def drawScreen(self, lines, points, mousePos):
+    def drawScreen(self, lines, points, relMousePos):
         self.screen.fill((150, 150, 175))
         self.drawGraph(lines, points)
         
+        # Draw all sliders
         for slider in self.sliders:
             slider.draw(self.screen)
 
-        SCREEN_FONT.render(self.screen, f"{mousePos[0]}, {mousePos[1]}", G_POINT[0] + G_WIDTH + 5)
+        # Draw all checkboxes
+        for checkBox in self.checkBoxes:
+            checkBox.draw(self.screen)
+
+        # Displaying the coordinates of the mouse on screen
+        if relMousePos != False:
+            pixScale = self.graphZoom / G_WIDTH
+            roundVal = int(log10(1 / self.graphZoom)) + 2
+
+            gMousePos = (round((relMousePos[0] - self.graphCentre[0]) * pixScale, roundVal),
+                         round((self.graphCentre[1] - relMousePos[1]) * pixScale, roundVal))
+            
+            if roundVal <= 0:
+                gMousePos = (int(gMousePos[0]), int(gMousePos[1]))
+
+            self.screen.blit(SCREEN_FONT.render(f"{str(gMousePos[0])}, {str(gMousePos[1])}", True, (50, 50, 60)), (G_POINT[0] + 5, G_POINT[1] + G_HEIGHT + 5))
         
         pg.display.flip()
 
@@ -133,7 +152,7 @@ class Display():
             
 
 class Slider():
-    def __init__(self, xPos1, xPos2, yPos, initVal, valRange, step, label):
+    def __init__(self, xPos1, xPos2, yPos, initVal, valRange, step, label, active = True):
         
         self.xPos1 = xPos1
         self.xPos2 = xPos2
@@ -148,11 +167,21 @@ class Slider():
         
         self.label = label
 
+        self.active = active
+
     def draw(self, surface):
-        pg.draw.line(surface, (100, 100, 120), (self.xPos1, self.yPos), (self.xPos2, self.yPos), 5)
-        pg.draw.circle(surface, (90, 70, 90), (self.xPos1 + self.value / self.range * self.length, self.yPos), 7)
+        if self.active:
+            lineColour = (100, 100, 120)
+            circColour = (90, 70, 90)
+            fontColour = (50, 50, 60)
+        else:
+            lineColour = (130, 130, 150)
+            circColour = (110, 110, 130)
+            fontColour = (100, 100, 120)
+        pg.draw.line(surface, lineColour, (self.xPos1, self.yPos), (self.xPos2, self.yPos), 5)
+        pg.draw.circle(surface, circColour, (self.xPos1 + self.value / self.range * self.length, self.yPos), 7)
         
-        labelSurf = SLIDER_FONT.render(self.label.replace("___", str(self.value)), True, (50, 50, 60))
+        labelSurf = UI_FONT.render(self.label.replace("___", str(self.value)), True, fontColour)
         surface.blit(labelSurf, (self.xPos1, self.yPos - 25))
     
     def moveSlider(self, mousePos):
@@ -175,15 +204,22 @@ class Slider():
 
 
 class CheckBox():
-    def __init__(self, pos, label, startState = False):
+    def __init__(self, pos, label, startState = False, active = True):
         self.label = label
         self.pos = pos
+
         self.state = startState
+        self.active = active
 
     def draw(self, surface):
         pg.draw.rect(surface, (100, 100, 100), pg.Rect(self.pos[0] - 7, self.pos[1] - 7, 14, 14))
-        if not self.state:
-            pg.draw.rect(surface, (200, 200, 200), pg.Rect(self.pos[0] - 6, self.pos[1] - 6, 12, 12))
+        pg.draw.rect(surface, (200, 200, 200), pg.Rect(self.pos[0] - 5, self.pos[1] - 5, 10, 10))
+        if self.state:
+            pg.draw.rect(surface, (70, 70, 70), pg.Rect(self.pos[0] - 4, self.pos[1] - 4, 8, 8))
+            
+        
+        labelSurf = UI_FONT.render(self.label, True, (50, 50, 60))
+        surface.blit(labelSurf, (self.pos[0] + 12, self.pos[1] - 10))
             
 
     def inHitbox(self, mousePos):
