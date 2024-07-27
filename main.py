@@ -1,7 +1,7 @@
-from numpy import pi, sin, cos, tan, sqrt, arctan, arcsin
+from numpy import pi, sin, cos, tan, sqrt, arctan, arcsin, log
 import pygame as pg
 pg.init()
-from display import Display, G_WIDTH, G_HEIGHT, G_POINT
+from display import Display, G_WIDTH, G_HEIGHT, G_POINT, SUB_WIDTH, SUB_HEIGHT, SUB_POINT
 
 
 class Point():
@@ -27,6 +27,7 @@ class World():
         self.display = Display()
         self.lines = []
         self.points = []
+        self.subLines = []
     
     # Task 1/2
     def basicProj(self, initPos, initVelocity, angle):
@@ -142,48 +143,99 @@ class World():
 
         return dist
     
-
     def findDistance(self, initPos, initVelocity, angle):
-        z = lambda x: tan(angle) - (gravity * x) / (initVelocity ** 2) * (1 + tan(angle) ** 2)
-        s = (initVelocity ** 2) / (g * (1 + tan(angle) ** 2)) * 
+        b = initVelocity * sin(angle)
+        endTime = (b + sqrt((b ** 2) - (2 * -gravity * initPos[1]))) / gravity
+        xDisp = initPos[0] + initVelocity * cos(angle) * endTime
+
+        sub1 = tan(angle)
+        sub2 = tan(angle) - (gravity * xDisp) / (initVelocity ** 2) * (1 + tan(angle) ** 2)
+
+        integral = lambda sub: 0.5 * log(abs(sqrt(1 + (sub) ** 2) + sub)) + 0.5 * sub * sqrt(1 + (sub ** 2))
+        distance = ((initVelocity ** 2) / (gravity * (1 + tan(angle) ** 2))) * (integral(sub1) - integral(sub2))
+        return distance
+
+    # Task 7
+    def timeRangeGraph(self, initPos, initVelocity, angle):
+        b = initVelocity * sin(angle)
+        endTime = (b + sqrt((b ** 2) - (2 * -gravity * initPos[1]))) / gravity
+
+        points = []
+        iters = 30
+        for i in range(iters):
+            time = i / iters * endTime
+            displacement = sqrt((initVelocity ** 2) * (time ** 2) - gravity * (time ** 3) * initVelocity * sin(angle) + 0.25 * (gravity ** 2) * (time ** 4))
+            points.append((time, displacement))
+
+        return Line(points, "Range/Time", (0, 0))
 
     # Program Handling
-    def relMousePos(self):
+    def graphMousePos(self):
         pos = pg.mouse.get_pos()
         relPos = (pos[0] - G_POINT[0], pos[1] - G_POINT[1])
         if 0 <= relPos[0] <= G_WIDTH and 0 <= relPos[1] <= G_HEIGHT:
-            return  relPos
-        else: return False
-        
+            return relPos
+        return False
+
+    def subMousePos(self):
+        pos = pg.mouse.get_pos()
+        relPos = (pos[0] - SUB_POINT[0], pos[1] - SUB_POINT[1])
+        if 0 <= relPos[0] <= SUB_WIDTH and 0 <= relPos[1] <= SUB_HEIGHT:
+            return relPos
+        return False
+
+
     def doEvents(self):
-        relMousePos = self.relMousePos()
+        graphMousePos = self.graphMousePos()
+        subMousePos = self.subMousePos()
         mousePos = pg.mouse.get_pos()
         gCentre = self.display.graphCentre
+        subCentre = self.display.subCentre
 
         # PyGame input events
         for event in pg.event.get():
                 if event.type == pg.QUIT: self.running = False
                 
                 # Scroll Wheel Input
-                if event.type == pg.MOUSEWHEEL and relMousePos != False:
-                    if event.y == 1:
-                        difference = (relMousePos[0] - gCentre[0], relMousePos[1] - gCentre[1])
-                        self.display.graphZoom /= 1.125
-                        
-                        if not (gCentre[0] - 25 < relMousePos[0] < gCentre[0] + 25 and gCentre[1] - 25 < relMousePos[1] < gCentre[1] + 25):
-                            self.display.graphCentre = [relMousePos[0] - difference[0] * 1.125, relMousePos[1] - difference[1] * 1.125]
-                        
-                    if event.y == -1:
-                        difference = (G_WIDTH // 2 - gCentre[0], G_HEIGHT // 2 - gCentre[1])
-                        self.display.graphZoom *= 1.125
-                        self.display.graphCentre = [G_WIDTH // 2 - difference[0] / 1.125, G_HEIGHT // 2 - difference[1] / 1.125]
+                if event.type == pg.MOUSEWHEEL:
+                    # Graph Zoom
+                    if graphMousePos != False:
+                        if event.y == 1:
+                            difference = (graphMousePos[0] - gCentre[0], graphMousePos[1] - gCentre[1])
+                            self.display.graphZoom /= 1.125
+                            
+                            if not (gCentre[0] - 25 < graphMousePos[0] < gCentre[0] + 25 and gCentre[1] - 25 < graphMousePos[1] < gCentre[1] + 25):
+                                self.display.graphCentre = [graphMousePos[0] - difference[0] * 1.125, graphMousePos[1] - difference[1] * 1.125]
+                            
+                        if event.y == -1:
+                            difference = (G_WIDTH // 2 - gCentre[0], G_HEIGHT // 2 - gCentre[1])
+                            self.display.graphZoom *= 1.125
+                            self.display.graphCentre = [G_WIDTH // 2 - difference[0] / 1.125, G_HEIGHT // 2 - difference[1] / 1.125]
+                    
+                    # Sub Graph Zoom
+                    elif subMousePos != False:
+                        if event.y == 1:
+                            difference = (subMousePos[0] - subCentre[0], subMousePos[1] - subCentre[1])
+                            self.display.subZoom /= 1.125
+                            
+                            if not (subCentre[0] - 25 < subMousePos[0] < subCentre[0] + 25 and subCentre[1] - 25 < subMousePos[1] < subCentre[1] + 25):
+                                self.display.subCentre = [subMousePos[0] - difference[0] * 1.125, subMousePos[1] - difference[1] * 1.125]
+                            
+                        if event.y == -1:
+                            difference = (SUB_WIDTH // 2 - subCentre[0], SUB_HEIGHT // 2 - subCentre[1])
+                            self.display.subZoom *= 1.125
+                            self.display.subCentre = [SUB_WIDTH // 2 - difference[0] / 1.125, SUB_HEIGHT // 2 - difference[1] / 1.125]
 
                 # Mouse Button Inputs
                 if event.type == pg.MOUSEBUTTONDOWN:
-                    if relMousePos != False:
+                    if graphMousePos != False:
                         self.mouseTracking = True
                         pg.mouse.get_rel()
                         
+                    elif subMousePos != False:
+                        self.subMouseTracking = True
+                        pg.mouse.get_rel()
+
                     else:
                         # Slider Tracking
                         for slider in self.display.sliders:
@@ -194,9 +246,9 @@ class World():
                         for checkBox in self.display.checkBoxes:
                             checkBox.inHitbox(mousePos)
 
-
                 if event.type == pg.MOUSEBUTTONUP:
                     self.mouseTracking = False
+                    self.subMouseTracking = False
                     for slider in self.display.sliders:
                         slider.tracking = False
 
@@ -204,11 +256,18 @@ class World():
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_ESCAPE: self.running = False
 
+        # Tracking the movement of the mouse
         if self.mouseTracking:
             displacement = pg.mouse.get_rel()
             self.display.graphCentre[0] += displacement[0]
             self.display.graphCentre[1] += displacement[1]
         
+        elif self.subMouseTracking:
+            displacement = pg.mouse.get_rel()
+            self.display.subCentre[0] += displacement[0]
+            self.display.subCentre[1] += displacement[1]
+
+        # Tracking the slider movement
         for slider in self.display.sliders:
             if slider.tracking:
                 slider.moveSlider(pg.mouse.get_pos()[0])
@@ -217,20 +276,25 @@ class World():
         global gravity
         self.running = True
         self.mouseTracking = False
+        self.subMouseTracking = False
         while self.running:
             self.lines = []
             self.points = []
+            self.subLines = []
+            self.subPoints = []
+
             if self.display.checkBoxes[1].state:
                 self.display.sliders[2].value = 9.81
                 self.display.sliders[2].active = False
             else:
                 self.display.sliders[2].active = True
             gravity = self.display.sliders[2].value
+
             
             self.doEvents()
             angle =  self.display.sliders[0].value / 180 * pi
             velocity = self.display.sliders[1].value
-            point1 = (0, 2)
+            point1 = (0, 10)
 
             if self.display.checkBoxes[0].state:
                 boundParabola = world.boundParabola(point1, velocity)
@@ -238,11 +302,13 @@ class World():
             
 
             line = self.basicProj(point1, velocity, angle)
-            # print(world.approxDist(point1, velocity, angle))
+            # approxDist = world.approxDist(point1, velocity, angle)
+            calcDist = world.findDistance(point1, velocity, angle)
 
+            self.subLines.append(self.timeRangeGraph(point1, velocity, angle))
             self.lines.append(line)
             
-            self.display.drawScreen(self.lines, self.points, self.relMousePos())
+            self.display.drawScreen(self.lines, self.points, self.graphMousePos(), self.subLines)
 
 world = World()
 

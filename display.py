@@ -7,7 +7,11 @@ HEIGHT = 700
 G_WIDTH = 620
 G_HEIGHT = 620
 
+SUB_WIDTH = 250
+SUB_HEIGHT = 150
+
 G_POINT = (25, 25)
+SUB_POINT = (WIDTH - SUB_WIDTH - 25, HEIGHT - SUB_HEIGHT - 50)
 
 AXES_SCALES = (1, 2, 5)
 
@@ -19,12 +23,19 @@ class Display():
     def __init__(self):
         self.graphFont = pg.font.SysFont("arial", 17)
         self.screen = pg.display.set_mode([WIDTH, HEIGHT])
+        pg.display.set_caption("Projectile Motion")
 
+        # Main Graph Properties
         self.graphSurf = pg.Surface((G_WIDTH, G_HEIGHT))
-        self.graphPoint = G_POINT
         self.graphZoom = 30
         self.graphCentre = [G_WIDTH / 6, 5 * G_HEIGHT / 6]
         
+        # Sub Graph Properties
+        self.subGraphSurf = pg.Surface((SUB_WIDTH, SUB_HEIGHT))
+        self.subZoom = 30
+        self.subCentre = [25, SUB_HEIGHT - 25]
+
+    
         self.sliders = [Slider(700, 1075, 100, 45, 90, 0.5, "Angle: ___°"),
                         Slider(700, 1075, 150, 10, 50, 0.0625, "Velocity:  ___m/s"),
                         Slider(700, 1075, 200, 9.81, 20, 0.0625, "Gravity:  ___N/Kg")]
@@ -33,9 +44,10 @@ class Display():
                            CheckBox((900, 300), "Earth Gravity", True)]
 
 
-    def drawScreen(self, lines, points, relMousePos):
+    def drawScreen(self, lines, points, relMousePos, subLines):
         self.screen.fill((150, 150, 175))
         self.drawGraph(lines, points)
+        self.drawSubGraph(subLines, None)
         
         # Draw all sliders
         for slider in self.sliders:
@@ -60,6 +72,67 @@ class Display():
         
         pg.display.flip()
 
+    def drawAxes(self, scale, width, height, centre, surface):
+
+        zoom = width / scale
+        exponent = log10(zoom) // 1
+        mantissa = zoom / (10 ** exponent)
+        
+
+        if 2.5 < mantissa < 5:
+            axisWidth = 5 * (10 ** (exponent - 1))
+        
+        elif 1 < mantissa <= 2.5:
+            axisWidth = 2 * (10 ** (exponent - 1))
+            
+        elif 5 < mantissa:
+            axisWidth = 1 * (10 ** exponent)
+        
+            
+        # Drawing the axes
+        if centre[0] < width: pg.draw.line(surface, (150, 150, 150), (centre[0], 0), (centre[0], height), 3)
+        if centre[1] < height: pg.draw.line(surface, (150, 150, 150), (0, centre[1]), (width, centre[1]), 3)
+
+        axScale = axisWidth * scale
+        
+        axisBefore = (-centre[0] // axScale + 1, centre[1] // axScale + 1)
+        centreOffset = (centre[0] % axScale, centre[1] % axScale)
+
+        if axisWidth >= 1: textType = True
+        else: textType = False
+
+        # Draw grid
+        for i in range(int(width // axScale) + 2):
+            x = centreOffset[0] + axScale * i
+
+            text = axisWidth * (axisBefore[0] + i)
+            if textType: text = int(text)
+
+            textSurf = self.graphFont.render(str(text), True, (100, 100, 100))
+            dims = textSurf.get_size()
+
+            if centre[1] < 4: surface.blit(textSurf, (x - dims[0] - 2, 4))
+            if 4 < centre[1] < height - dims[1] - 4: surface.blit(textSurf, (x - dims[0] - 2, centre[1]))
+            if height - dims[1] - 4 < centre[1]: surface.blit(textSurf, (x - dims[0] - 2, height - dims[1] - 4))
+
+            pg.draw.line(surface, (150, 150, 150), (x, 0), (x, height))
+        
+        
+        for i in range(int(height // axScale) + 2):
+            y = centreOffset[1] + axScale * (i - 1)
+
+            text = axisWidth * (axisBefore[1] - i)
+            if textType: text = int(text)
+
+            textSurf = self.graphFont.render(str(text), True, (100, 100, 100))
+            dims = textSurf.get_size()
+
+            if centre[0] < dims[0] + 8: surface.blit(textSurf, (6, y))
+            if dims[0] + 8 < centre[0] < width - 4: surface.blit(textSurf, (centre[0] - dims[0] - 2, y))
+            if width - 4 < centre[0]: surface.blit(textSurf, (width - dims[0] - 6, y))
+
+            pg.draw.line(surface, (150, 150, 150), (0, y), (width, y))
+
     def drawGraph(self, lines, points):
         # How many pixels in 1 unit measurement
         scale = G_WIDTH / self.graphZoom
@@ -68,7 +141,7 @@ class Display():
         centre = self.graphCentre
         
         self.graphSurf.fill((200, 200, 200))
-        self.drawAxes(scale)
+        self.drawAxes(scale, G_WIDTH, G_HEIGHT, centre, self.graphSurf)
 
         # Drawing any lines
         for line in lines:
@@ -87,69 +160,32 @@ class Display():
             
         # Drawing the border
         pg.draw.lines(self.graphSurf, (0, 0, 0), True, ((0, 0), (G_WIDTH - 1, 0), (G_WIDTH - 1, G_HEIGHT - 1), (0, G_HEIGHT - 1)), 5)
-        self.screen.blit(self.graphSurf, self.graphPoint)
+        self.screen.blit(self.graphSurf, G_POINT)
 
-    def drawAxes(self, scale):
-        centre = self.graphCentre
-        
-        exponent = log10(self.graphZoom) // 1
-        mantissa = self.graphZoom / (10 ** exponent)
-        
 
-        if 2.5 < mantissa < 5:
-            axisWidth = 5 * (10 ** (exponent - 1))
-        
-        elif 1 < mantissa <= 2.5:
-            axisWidth = 2 * (10 ** (exponent - 1))
-            
-        elif 5 < mantissa:
-            axisWidth = 1 * (10 ** exponent)
-        
-            
-        # Drawing the axes
-        if centre[0] < G_WIDTH: pg.draw.line(self.graphSurf, (150, 150, 150), (centre[0], 0), (centre[0], G_HEIGHT), 3)
-        if centre[1] < G_HEIGHT: pg.draw.line(self.graphSurf, (150, 150, 150), (0, centre[1]), (G_WIDTH, centre[1]), 3)
+    def drawSubGraph(self, lines, points):
+        scale = SUB_WIDTH / self.subZoom
+        centre = self.subCentre
+        self.subGraphSurf.fill((200, 200, 200))
+        self.drawAxes(scale, SUB_WIDTH, SUB_HEIGHT, centre, self.subGraphSurf)
 
-        axScale = axisWidth * scale
-        
-        axisBefore = (-centre[0] // axScale + 1, centre[1] // axScale + 1)
-        centreOffset = (centre[0] % axScale, centre[1] % axScale)
 
-        if axisWidth >= 1: textType = True
-        else: textType = False
+        for line in lines:
+            l_points = line.points
+            for i in range(len(l_points) - 1):
+                point1 = (centre[0] + l_points[i][0] * scale,
+                        centre[1] - l_points[i][1] * scale)
 
-        # Draw grid
-        for i in range(int(G_WIDTH // axScale) + 2):
-            x = centreOffset[0] + axScale * i
+                point2 = (centre[0] + l_points[i + 1][0] * scale,
+                          centre[1] - l_points[i + 1][1] * scale)
+                pg.draw.aaline(self.subGraphSurf, (0, 0, 0), point1, point2)
 
-            text = axisWidth * (axisBefore[0] + i)
-            if textType: text = int(text)
 
-            textSurf = self.graphFont.render(str(text), True, (100, 100, 100))
-            dims = textSurf.get_size()
+        # Drawing the border
+        pg.draw.lines(self.subGraphSurf, (0, 0, 0), True, ((0, 0), (SUB_WIDTH - 1, 0), (SUB_WIDTH - 1, SUB_HEIGHT - 1), (0, SUB_HEIGHT - 1)), 5)
+        self.screen.blit(self.subGraphSurf, SUB_POINT)
 
-            if centre[1] < 4: self.graphSurf.blit(textSurf, (x - dims[0] - 2, 4))
-            if 4 < centre[1] < G_HEIGHT - dims[1] - 4: self.graphSurf.blit(textSurf, (x - dims[0] - 2, centre[1]))
-            if G_HEIGHT - dims[1] - 4 < centre[1]: self.graphSurf.blit(textSurf, (x - dims[0] - 2, G_HEIGHT - dims[1] - 4))
 
-            pg.draw.line(self.graphSurf, (150, 150, 150), (x, 0), (x, G_HEIGHT))
-        
-        
-        for i in range(int(G_HEIGHT // axScale) + 2):
-            y = centreOffset[1] + axScale * (i - 1)
-
-            text = axisWidth * (axisBefore[1] - i)
-            if textType: text = int(text)
-
-            textSurf = self.graphFont.render(str(text), True, (100, 100, 100))
-            dims = textSurf.get_size()
-
-            if centre[0] < dims[0] + 8: self.graphSurf.blit(textSurf, (6, y))
-            if dims[0] + 8 < centre[0] < G_WIDTH - 4: self.graphSurf.blit(textSurf, (centre[0] - dims[0] - 2, y))
-            if G_WIDTH - 4 < centre[0]: self.graphSurf.blit(textSurf, (G_WIDTH - dims[0] - 6, y))
-
-            pg.draw.line(self.graphSurf, (150, 150, 150), (0, y), (G_WIDTH, y))
-            
 
 class Slider():
     def __init__(self, xPos1, xPos2, yPos, initVal, valRange, step, label, active = True):
