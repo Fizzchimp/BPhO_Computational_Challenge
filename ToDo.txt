@@ -1,6 +1,9 @@
 TOF measurement
 Points display and interactivibility
 Sort out subGraph
+Speed time subGraph
+textbox inputs
+Fix bounding parabola for non (0, 0) points
 
 CHALLENGES:
 8 and 9

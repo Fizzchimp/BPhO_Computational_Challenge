@@ -169,6 +169,12 @@ class World():
 
         return Line(points, "Range/Time", (0, 0))
 
+
+    # Task 8
+    def bounceProj(self, initPos, initVelocity, angle):
+        pass
+
+    
     # Program Handling
     def graphMousePos(self):
         pos = pg.mouse.get_pos()
