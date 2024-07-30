@@ -5,20 +5,24 @@ from display import Display, G_WIDTH, G_HEIGHT, G_POINT, SUB_WIDTH, SUB_HEIGHT, 
 
 
 class Point():
-    def __init__(self, pos, colour, label):
+    def __init__(self, pos, label = None, colour = (70, 70, 70)):
         self.pos = pos
         self.colour = colour
         
         self.label = label
 
 class Line():
-    def __init__(self, points, label, initPos = None, endPos = None, apogee = None):
+    def __init__(self, points, label = None, colour = (100, 100, 100)):
         self.points = points
         
-        self.startPoint = initPos
-        self.endPoint = endPos
-        
-        self.apogee = apogee
+        self.colour = colour
+        self.label = label
+
+        self.properties = []
+
+    def addProperties(self, *items):
+        for item in items:
+                self.properties.append(item)
 
 
 
@@ -63,10 +67,14 @@ class World():
         endTime = (b + sqrt((b ** 2) - (2 * -gravity * initPos[1]))) / gravity
 
         endPos = (initPos[0] + initVelocity * cos(angle) * endTime, 0)
-        endPoint = Point(endPos, (70, 70, 100), "end")
+        endPoint = Point(endPos, (70, 70, 100), "End")
         points.append(endPos)
-        
-        return Line(points, "Line", startPoint, endPoint, apogee)
+
+        line = Line(points, "Line", (100, 70, 70))
+
+        line.addProperties(startPoint, endPoint, apogee)
+
+        return line
 
     # Task 3
     def twoPoints(self, point1, point2, initVelocity):
@@ -113,12 +121,11 @@ class World():
     # Task 5
     def boundParabola(self, initPos, initVelocity):
         x = 0
+        y = 0
         points = []
-        while True:
+        while y > -initPos[1]:
             y = ((initVelocity ** 2) / (2 * gravity)) - ((gravity * (x ** 2)) / (2 * (initVelocity) ** 2))
             points.append((x + initPos[0], y + initPos[1]))
-            if y < 0:
-                break
             x += 0.1
 
         line = Line(points, "Bounding Parabola")
@@ -171,10 +178,76 @@ class World():
 
 
     # Task 8
-    def bounceProj(self, initPos, initVelocity, angle):
-        pass
+    def bounceProj(self, initPos, initVelocity, angle, coeffRest, iterationsLeft):
+        self.lines.append(self.basicProj(initPos, initVelocity, angle))
+        
+        if iterationsLeft > 1:
+            b = initVelocity * sin(angle)
+            endTime = (b + sqrt((b ** 2) - (2 * -gravity * initPos[1]))) / gravity
+            
+            endPos = (initPos[0] + initVelocity * cos(angle) * endTime, 0)
+            endVelY = initVelocity * sin(angle) - gravity * endTime
 
-    
+            newVelY = -endVelY * coeffRest
+            velX = initVelocity * cos(angle)
+
+            newVel = sqrt(newVelY ** 2 + velX ** 2)
+            newAngle = arctan(newVelY / velX)
+
+            self.bounceProj(endPos, newVel, newAngle, coeffRest, iterationsLeft - 1)
+
+
+    # Task 9
+    def airResistance(self, initPos, initVelocity, angle, k):
+        x = initPos[0]
+        y = initPos[1]
+        xVel = initVelocity * cos(angle)
+        yVel = initVelocity * sin(angle)
+        speed = initVelocity
+        xAcc = 0
+        yAcc = -gravity
+
+        time = 0
+        dt = 0.1
+        points = []
+        while y >= 0:
+            points.append((x, y))
+            time += dt
+            xAcc = -xVel / speed * k * (speed ** 2)
+            yAcc = -gravity - yVel / speed * k * (speed ** 2)
+            x += xVel * dt + 0.5 * xAcc * (dt ** 2)
+            y += yVel * dt + 0.5 * yAcc * (dt **2)
+            xVel += xAcc * dt
+            yVel += yAcc * dt
+            speed = sqrt(xVel ** 2 + yVel ** 2)
+
+        return Line(points, "Air resistance")
+
+    def testAirResistance(self, initPos, initVelocity, angle, k):
+        points = []
+        x, xVel, xAcc = initPos[0], initVelocity * cos(angle), 0
+        y, yVel, yAcc = initPos[1], initVelocity * sin(angle), -gravity
+        dt = 0.01
+        while y >= 0:
+            points.append((x, y))
+            # xVel += 0.5 * xAcc * dt
+            xVel += xAcc * dt
+            x += xVel * dt
+            # xVel += 0.5 * xAcc * dt
+
+            # yVel += 0.5 * yAcc * dt#
+            yVel += yAcc * dt
+            y += yVel * dt
+            # yVel += 0.5 * yAcc * dt
+
+            speed = sqrt(xVel ** 2 + yVel ** 2)
+            xAcc = -xVel * k * speed
+            yAcc = -gravity - xVel * k * speed
+
+        return Line(points, "Air resistance")
+
+
+
     # Program Handling
     def graphMousePos(self):
         pos = pg.mouse.get_pos()
@@ -252,6 +325,13 @@ class World():
                         for checkBox in self.display.checkBoxes:
                             checkBox.inHitbox(mousePos)
 
+                        # TextBox Tracking
+                        for textBox in self.display.textBoxes:
+                            textBox.mouseClicked(event)
+                        
+                        # Tab Detection
+                        self.display.tabMenu.mouseClicked(event)
+
                 if event.type == pg.MOUSEBUTTONUP:
                     self.mouseTracking = False
                     self.subMouseTracking = False
@@ -260,7 +340,13 @@ class World():
 
                 # Keyboard Inputs
                 if event.type == pg.KEYDOWN:
+                    # Checking TextBox Inputs
+                    for textBox in self.display.textBoxes:
+                        if textBox.tracking:
+                            textBox.keyPressed(event)
                     if event.key == pg.K_ESCAPE: self.running = False
+
+
 
         # Tracking the movement of the mouse
         if self.mouseTracking:
@@ -278,12 +364,23 @@ class World():
             if slider.tracking:
                 slider.moveSlider(pg.mouse.get_pos()[0])
 
+
+    def activeUI(self):
+        self.display.textBoxes[2].hidden = True
+        self.display.textBoxes[3].hidden = True
+        
+        if self.display.tabMenu.currentTab == 0:
+            self.display.textBoxes[2].hidden = False
+            self.display.textBoxes[3].hidden = False
+
+
     def run(self):
         global gravity
         self.running = True
         self.mouseTracking = False
         self.subMouseTracking = False
         while self.running:
+            self.activeUI()
             self.lines = []
             self.points = []
             self.subLines = []
@@ -300,19 +397,35 @@ class World():
             self.doEvents()
             angle =  self.display.sliders[0].value / 180 * pi
             velocity = self.display.sliders[1].value
-            point1 = (0, 10)
+
+            xPoint = self.display.textBoxes[0].value
+            yPoint = self.display.textBoxes[1].value
+            if xPoint == "" or xPoint == ".": xPoint = 0
+            if yPoint == "" or xPoint == ".": yPoint = 0
+            point1 = (float(xPoint), float(yPoint))
 
             if self.display.checkBoxes[0].state:
-                boundParabola = world.boundParabola(point1, velocity)
-                world.lines.append(boundParabola)
+                boundParabola = self.boundParabola(point1, velocity)
+                self.lines.append(boundParabola)
             
 
-            line = self.basicProj(point1, velocity, angle)
+            self.lines.append(self.basicProj(point1, velocity, angle))
+
+            dragCoeff = 0.1
+            crossArea = 0.00785
+            airDensity = 1
+            mass = 0.1
+
+            k = (0.5 * dragCoeff * airDensity * crossArea) / mass
+
+            # self.lines.append(self.airResistance(point1, velocity, angle, 0.003927))
+            # self.lines.append(self.testAirResistance(point1, velocity, angle, 0.003927))
             # approxDist = world.approxDist(point1, velocity, angle)
-            calcDist = world.findDistance(point1, velocity, angle)
+            # calcDist = world.findDistance(point1, velocity, angle)
+
+            # self.bounceProj(point1, velocity, angle, 0.8, 4)
 
             self.subLines.append(self.timeRangeGraph(point1, velocity, angle))
-            self.lines.append(line)
             
             self.display.drawScreen(self.lines, self.points, self.graphMousePos(), self.subLines)
 

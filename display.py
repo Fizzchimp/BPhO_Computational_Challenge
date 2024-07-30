@@ -4,26 +4,25 @@ from numpy import round, log10
 WIDTH = 1100
 HEIGHT = 700
 
-G_WIDTH = 620
+G_WIDTH = 650
 G_HEIGHT = 620
 
 SUB_WIDTH = 250
 SUB_HEIGHT = 150
 
-G_POINT = (25, 25)
+G_POINT = (15, 15)
 SUB_POINT = (WIDTH - SUB_WIDTH - 25, HEIGHT - SUB_HEIGHT - 50)
 
 AXES_SCALES = (1, 2, 5)
 
-SCREEN_FONT = pg.font.SysFont("arial", 17)
+GRAPH_FONT = pg.font.SysFont("arial", 17)
 
 UI_FONT = pg.font.SysFont("arial", 17)
 
 class Display():
     def __init__(self):
-        self.graphFont = pg.font.SysFont("arial", 17)
         self.screen = pg.display.set_mode([WIDTH, HEIGHT])
-        pg.display.set_caption("Projectile Motion")
+        pg.display.set_caption("Projectile Simulation")
 
         # Main Graph Properties
         self.graphSurf = pg.Surface((G_WIDTH, G_HEIGHT))
@@ -36,18 +35,29 @@ class Display():
         self.subCentre = [25, SUB_HEIGHT - 25]
 
     
-        self.sliders = [Slider(700, 1075, 100, 45, 90, 0.5, "Angle: ___°"),
-                        Slider(700, 1075, 150, 10, 50, 0.0625, "Velocity:  ___m/s"),
-                        Slider(700, 1075, 200, 9.81, 20, 0.0625, "Gravity:  ___N/Kg")]
+        self.sliders = [Slider(690, 1075, 50, 45, 90, 0.5, "Angle: ___°"),
+                        Slider(690, 1075, 100, 10, 50, 0.0625, "Velocity:  ___m/s"),
+                        Slider(690, 1075, 270, 9.81, 20, 0.0625, "Gravity:  ___N/Kg")]
         
-        self.checkBoxes = [CheckBox((710, 300), "Bounding Parabola"),
-                           CheckBox((900, 300), "Earth Gravity", True)]
+        self.checkBoxes = [CheckBox((900, 150), "Bounding Parabola"),
+                           CheckBox((710, 230), "Earth Gravity", True),
+                           CheckBox((900, 180), "Bounce")]
 
+        self.textBoxes = [TextBox((710, 150), 40, "X : ", 0),
+                          TextBox((790, 150), 40, "Y : ", 0),
+                          TextBox((710, 500), 40, "X : ", 10, True),
+                          TextBox((790, 500), 40, "Y : ", 10, True)]
+        
+        self.tabMenu = TabMenu((680, 375), (1085, 685), ("Two Points", "Sub Graph", "Air Resistance"))
 
     def drawScreen(self, lines, points, relMousePos, subLines):
         self.screen.fill((150, 150, 175))
         self.drawGraph(lines, points)
-        self.drawSubGraph(subLines, None)
+
+        # Draw the Tab Menu
+        self.tabMenu.draw(self.screen)
+
+        if self.tabMenu.currentTab == 1: self.drawSubGraph(subLines, None)
         
         # Draw all sliders
         for slider in self.sliders:
@@ -56,6 +66,11 @@ class Display():
         # Draw all checkboxes
         for checkBox in self.checkBoxes:
             checkBox.draw(self.screen)
+
+        # Draw all textboxes
+        for textBox in self.textBoxes:
+            textBox.draw(self.screen)
+
 
         # Displaying the coordinates of the mouse on screen
         if relMousePos != False:
@@ -68,7 +83,7 @@ class Display():
             if roundVal <= 0:
                 gMousePos = (int(gMousePos[0]), int(gMousePos[1]))
 
-            self.screen.blit(SCREEN_FONT.render(f"{str(gMousePos[0])}, {str(gMousePos[1])}", True, (50, 50, 60)), (G_POINT[0] + 5, G_POINT[1] + G_HEIGHT + 5))
+            self.screen.blit(UI_FONT.render(f"{str(gMousePos[0])}, {str(gMousePos[1])}", True, (50, 50, 60)), (G_POINT[0] + 5, G_POINT[1] + G_HEIGHT + 5))
         
         pg.display.flip()
 
@@ -108,7 +123,7 @@ class Display():
             text = axisWidth * (axisBefore[0] + i)
             if textType: text = int(text)
 
-            textSurf = self.graphFont.render(str(text), True, (100, 100, 100))
+            textSurf = GRAPH_FONT.render(str(text), True, (100, 100, 100))
             dims = textSurf.get_size()
 
             if centre[1] < 4: surface.blit(textSurf, (x - dims[0] - 2, 4))
@@ -124,7 +139,7 @@ class Display():
             text = axisWidth * (axisBefore[1] - i)
             if textType: text = int(text)
 
-            textSurf = self.graphFont.render(str(text), True, (100, 100, 100))
+            textSurf = GRAPH_FONT.render(str(text), True, (100, 100, 100))
             dims = textSurf.get_size()
 
             if centre[0] < dims[0] + 8: surface.blit(textSurf, (6, y))
@@ -152,7 +167,7 @@ class Display():
 
                 point2 = (centre[0] + l_points[i + 1][0] * scale,
                           centre[1] - l_points[i + 1][1] * scale)
-                pg.draw.aaline(self.graphSurf, (0, 0, 0), point1, point2)
+                pg.draw.aaline(self.graphSurf, line.colour, point1, point2)
 
         # Drawing any points
         for point in points:
@@ -161,7 +176,6 @@ class Display():
         # Drawing the border
         pg.draw.lines(self.graphSurf, (0, 0, 0), True, ((0, 0), (G_WIDTH - 1, 0), (G_WIDTH - 1, G_HEIGHT - 1), (0, G_HEIGHT - 1)), 5)
         self.screen.blit(self.graphSurf, G_POINT)
-
 
     def drawSubGraph(self, lines, points):
         scale = SUB_WIDTH / self.subZoom
@@ -188,7 +202,7 @@ class Display():
 
 
 class Slider():
-    def __init__(self, xPos1, xPos2, yPos, initVal, valRange, step, label, active = True):
+    def __init__(self, xPos1, xPos2, yPos, initVal, valRange, step, label, active = True, hidden = False):
         
         self.xPos1 = xPos1
         self.xPos2 = xPos2
@@ -204,21 +218,23 @@ class Slider():
         self.label = label
 
         self.active = active
+        self.hidden = hidden
 
     def draw(self, surface):
-        if self.active:
-            lineColour = (100, 100, 120)
-            circColour = (90, 70, 90)
-            fontColour = (50, 50, 60)
-        else:
-            lineColour = (130, 130, 150)
-            circColour = (110, 110, 130)
-            fontColour = (100, 100, 120)
-        pg.draw.line(surface, lineColour, (self.xPos1, self.yPos), (self.xPos2, self.yPos), 5)
-        pg.draw.circle(surface, circColour, (self.xPos1 + self.value / self.range * self.length, self.yPos), 7)
-        
-        labelSurf = UI_FONT.render(self.label.replace("___", str(self.value)), True, fontColour)
-        surface.blit(labelSurf, (self.xPos1, self.yPos - 25))
+        if not self.hidden:
+            if self.active:
+                lineColour = (100, 100, 120)
+                circColour = (90, 70, 90)
+                fontColour = (50, 50, 60)
+            else:
+                lineColour = (130, 130, 150)
+                circColour = (110, 110, 130)
+                fontColour = (100, 100, 120)
+            pg.draw.line(surface, lineColour, (self.xPos1, self.yPos), (self.xPos2, self.yPos), 5)
+            pg.draw.circle(surface, circColour, (self.xPos1 + self.value / self.range * self.length, self.yPos), 7)
+            
+            labelSurf = UI_FONT.render(self.label.replace("___", str(self.value)), True, fontColour)
+            surface.blit(labelSurf, (self.xPos1, self.yPos - 25))
     
     def moveSlider(self, mousePos):
         if self.xPos1 <= mousePos <= self.xPos2:
@@ -238,27 +254,132 @@ class Slider():
             self.tracking = True
 
 
-
 class CheckBox():
-    def __init__(self, pos, label, startState = False, active = True):
+    def __init__(self, pos, label, startState = False, active = True, hidden = False):
         self.label = label
         self.pos = pos
 
         self.state = startState
         self.active = active
+        self.hidden = hidden
 
     def draw(self, surface):
-        pg.draw.rect(surface, (100, 100, 100), pg.Rect(self.pos[0] - 7, self.pos[1] - 7, 14, 14))
-        pg.draw.rect(surface, (200, 200, 200), pg.Rect(self.pos[0] - 5, self.pos[1] - 5, 10, 10))
-        if self.state:
-            pg.draw.rect(surface, (70, 70, 70), pg.Rect(self.pos[0] - 4, self.pos[1] - 4, 8, 8))
+        if not self.hidden:
+            pg.draw.rect(surface, (100, 100, 100), pg.Rect(self.pos[0] - 7, self.pos[1] - 7, 14, 14))
+            pg.draw.rect(surface, (200, 200, 200), pg.Rect(self.pos[0] - 5, self.pos[1] - 5, 10, 10))
+            if self.state:
+                pg.draw.rect(surface, (70, 70, 70), pg.Rect(self.pos[0] - 4, self.pos[1] - 4, 8, 8))
+                
             
-        
-        labelSurf = UI_FONT.render(self.label, True, (50, 50, 60))
-        surface.blit(labelSurf, (self.pos[0] + 12, self.pos[1] - 10))
+            labelSurf = UI_FONT.render(self.label, True, (50, 50, 60))
+            surface.blit(labelSurf, (self.pos[0] + 12, self.pos[1] - 10))
             
 
     def inHitbox(self, mousePos):
         if self.pos[0] - 7 <= mousePos[0] <= self.pos[0] + 7 and self.pos[1] - 7 <= mousePos[1] <= self.pos[1] + 7:
                 if self.state: self.state = False
                 else: self.state = True
+
+
+class TextBox():
+    def __init__(self, pos, width, label, defaultVal, hidden = False):
+        self.pos = pos
+        self.width = width
+        self.hitBox = pg.Rect(self.pos, (self.width, 25))
+
+        self.label = label
+        self.labelSurf = UI_FONT.render(self.label, True, (50, 50, 70))
+        self.labelDims = self.labelSurf.get_size()
+        self.value = str(defaultVal)
+
+        self.tracking = False
+        self.cursorClock = pg.time.Clock()
+        self.cursorTime = 0
+        self.hidden = hidden
+
+    def draw(self, surface):
+        if not self.hidden:
+            height = 25
+            pg.draw.rect(surface, (180, 180, 220), self.hitBox)
+            pg.draw.lines(surface, (50, 50, 70), True, (self.pos, (self.pos[0] + self.width, self.pos[1]), (self.pos[0] + self.width, self.pos[1] + height), (self.pos[0],self.pos[1] + height)), 2)
+            
+            surface.blit(self.labelSurf, (self.pos[0] - self.labelDims[0], self.pos[1] + (height - self.labelDims[1]) / 2))
+
+            valSurf = UI_FONT.render(str(self.value), True, (50, 50, 70))
+            valDims = valSurf.get_size()
+            surface.blit(valSurf, (self.pos[0] + 5, self.pos[1] + 3))
+
+            if self.tracking:
+                if (self.cursorTime // 500) %  2 == 0:
+                    surface.blit(UI_FONT.render("|", True, (70, 70, 100)), (self.pos[0] + 5 + valDims[0], self.pos[1] + 1))
+                self.cursorTime += self.cursorClock.tick()
+
+    def mouseClicked(self, event):
+        if self.hitBox.collidepoint(event.pos):
+            self.tracking = True
+            self.cursorClock.tick()
+            self.cursorTime = 0
+        else:
+            self.tracking = False
+
+    def keyPressed(self, event):
+        if event.key == pg.K_BACKSPACE:
+            self.value = self.value[:-1]
+
+        if 48 <= event.key <= 57:
+            self.value += event.unicode
+        
+        if event.key == pg.K_PERIOD and "." not in self.value:
+            self.value += event.unicode
+
+
+class TabMenu():
+    def __init__(self, pos1, pos2, tabs, currentTab = 0):
+        self.pos1 = pos1
+        self.pos2 = pos2
+        self.dims = (pos2[0] - pos1[0], pos2[1] - pos1[1])
+
+        self.rect = pg.Rect(self.pos1, self.dims)
+
+        self.currentTab = currentTab
+
+        self.tabs = [None for i in range(len(tabs))]
+        self.tabWidth = self.dims[0] / len(tabs)
+        
+
+        for i, label in enumerate(tabs):
+            tabRect = pg.Rect((self.pos1[0] + i * self.tabWidth, self.pos1[1] - 35), (self.tabWidth, 40))
+            labelSurf = UI_FONT.render(label, True, (50, 50, 70))
+
+            self.tabs[i] = (labelSurf, tabRect)
+
+    def draw(self, surface):
+        r = 3
+        bCol = (50, 50, 80)
+        darkCol = (110, 110, 140)
+
+        for i, (labelSurf, rect) in enumerate(self.tabs):
+            pg.draw.rect(surface, (130, 130, 160), rect, 0, -1, r, r)
+            pg.draw.rect(surface, (80, 80, 100), rect, r - 1, r)
+            labelDims = labelSurf.get_size()
+            surface.blit(labelSurf, (self.pos1[0] + self.tabWidth * (i + 0.5) - labelDims[0] / 2, self.pos1[1] - 28))
+        
+    
+        pg.draw.rect(surface, darkCol, self.rect, 0, r)
+        pg.draw.rect(surface, bCol, self.rect, r, r)
+        
+
+        labelSurf, tabRect = self.tabs[self.currentTab]
+        pg.draw.rect(surface, darkCol, tabRect, 0, -1, r, r)
+        pg.draw.rect(surface, bCol, tabRect, r, r)
+        labelDims = labelSurf.get_size()
+        surface.blit(labelSurf, (self.pos1[0] + self.tabWidth * (self.currentTab + 0.5) - labelDims[0] / 2, self.pos1[1] - 28))
+
+        pg.draw.line(surface, darkCol, (self.pos1[0] + self.tabWidth * self.currentTab + 1, self.pos1[1] + r), (self.pos1[0] + self.tabWidth * (self.currentTab + 1) - 1, self.pos1[1] + r), r)
+        pg.draw.line(surface, bCol, (self.pos1[0] + r / 2, self.pos1[1]), (self.pos1[0] + r / 2, self.pos1[1] + 10), r)
+        pg.draw.line(surface, bCol, (self.pos2[0] - r / 2, self.pos1[1]), (self.pos2[0] - r / 2, self.pos1[1] + 10), r)
+
+    def mouseClicked(self, event):
+        for i, tab in enumerate(self.tabs):
+            if tab[1].collidepoint(event.pos):
+                self.currentTab = i
