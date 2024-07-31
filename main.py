@@ -333,6 +333,8 @@ class World():
                     if self.display.tabMenu.mouseClicked(event):
                         self.display.sliders[3].hidden = True
                         self.display.sliders[4].hidden = True
+                        self.display.sliders[5].hidden = True
+                        self.display.sliders[6].hidden = True
 
                         self.display.textBoxes[2].hidden = True
                         self.display.textBoxes[3].hidden = True
@@ -355,6 +357,10 @@ class World():
                             self.display.sliders[4].hidden = False
                             self.display.textBoxes[4].hidden = False
                             self.display.textBoxes[5].hidden = False
+
+                        if self.display.tabMenu.currentTab == 3:
+                            self.display.sliders[5].hidden = False
+                            self.display.sliders[6].hidden = False
 
                 if event.type == pg.MOUSEBUTTONUP:
                     self.mouseTracking = False
@@ -439,6 +445,7 @@ class World():
 
                 if self.display.checkBoxes[3].state: self.lines.append(self.minVelocity(point1, point2))
             
+            # Air resistance Tab
             if self.display.tabMenu.currentTab == 2:
                 dragCoeff = self.display.sliders[3].value
                 airDensity = self.display.sliders[4].value
@@ -456,12 +463,14 @@ class World():
                 self.lines.append(self.testAirResistance(point1, velocity, angle, k))
 
         
+            # Bounces Tab
+            if self.display.tabMenu.currentTab == 3:
+                coeffRest = self.display.sliders[5].value
+                bounces = self.display.sliders[6].value
+                self.bounceProj(point1, velocity, angle, coeffRest, bounces)
 
-            if self.display.tabMenu.currentTab == 2:
-                pass
 
-
-            self.lines.append(self.basicProj(point1, velocity, angle))
+            else: self.lines.append(self.basicProj(point1, velocity, angle))
 
             # approxDist = world.approxDist(point1, velocity, angle)
             # calcDist = world.findDistance(point1, velocity, angle)
@@ -471,7 +480,6 @@ class World():
             self.subLines.append(self.timeRangeGraph(point1, velocity, angle))
             
             self.display.drawScreen(self.lines, self.points, self.graphMousePos(), self.subLines)
-            print(pg.mouse.get_pos())
 
 world = World()
 

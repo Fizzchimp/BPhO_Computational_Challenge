@@ -17,6 +17,7 @@ AXES_SCALES = (1, 2, 5)
 
 GRAPH_FONT = pg.font.SysFont("arial", 17)
 
+TAB_FONT = pg.font.SysFont("arial", 17)
 UI_FONT = pg.font.SysFont("arial", 20)
 
 TITLE_FONT = pg.font.SysFont("arial", 20)
@@ -40,25 +41,27 @@ class Display():
     
         self.sliders = [Slider(690, 1075, 50, 45, 90, 0.5, "Angle: ___°"),
                         Slider(690, 1075, 100, 10, 50, 0.0625, "Velocity:  ___m/s"),
-                        Slider(690, 1075, 270, 9.81, 20, 0.0625, "Gravity:  ___N/Kg"),
+                        Slider(690, 1075, 310, 9.81, 20, 0.0625, "Gravity:  ___N/Kg"),
                         Slider(710, 1055, 440, 0.5, 2, 0.00390625, "Drag Coefficient: ___", hidden = True),
-                        Slider(710, 1055, 500, 1.204, 5, 0.015625, "Air Density: ___Kg/m³", hidden = True)]
+                        Slider(710, 1055, 500, 1.2, 5, 0.015625, "Air Density: ___Kg/m³", hidden = True),
+                        Slider(710, 1055, 480, 0.5, 1, 0.00390625, "Coefficient of Restitution: ___", hidden = True),
+                        Slider(710, 1055, 570, 4, 10, 1, "Number of bounces: ___", hidden = True)]
         
-        self.checkBoxes = [CheckBox((900, 150), "Bounding Parabola"),
-                           CheckBox((710, 230), "Earth Gravity", True),
-                           CheckBox((710, 300), "Maximum Range"),
+        self.checkBoxes = [CheckBox((900, 160), "Bounding Parabola"),
+                           CheckBox((697, 255), "Earth Gravity", True),
+                           CheckBox((900, 200), "Maximum Range"),
                            CheckBox((710, 510), "Minimum Velocity", True, hidden = True),
                            CheckBox((710, 545), "High Ball", hidden = True),
                            CheckBox((710, 580), "Low Ball", hidden = True)]
 
-        self.textBoxes = [TextBox((710, 170), 40, "X : ", 0),
-                          TextBox((790, 170), 40, "Y : ", 0),
+        self.textBoxes = [TextBox((716, 170), 40, "X : ", 0),
+                          TextBox((794, 170), 40, "Y : ", 0),
                           TextBox((732, 440), 40, "X : ", 3, True),
                           TextBox((812, 440), 40, "Y : ", 3, True),
                           TextBox((915, 540), 40, "Cross Sectional Area (cm²): ", 10, True),
                           TextBox((784, 590), 40, "Mass (g): ", 5, True)]
         
-        self.tabMenu = TabMenu((680, 375), (1085, 685), ("Sub Graph", "Two Points", "Air Resistance"))
+        self.tabMenu = TabMenu((680, 375), (1085, 685), ("Sub Graph", "Two Points", "Air Resistance", "Bounce"))
 
         self.textSurfs = [TITLE_FONT.render("Launch Point:", True, (50, 50, 70)),
                           TITLE_FONT.render("Second Point:", True, (50, 50, 70))]
@@ -364,7 +367,7 @@ class TabMenu():
 
         for i, label in enumerate(tabs):
             tabRect = pg.Rect((self.pos1[0] + i * self.tabWidth, self.pos1[1] - 35), (self.tabWidth, 40))
-            labelSurf = UI_FONT.render(label, True, (50, 50, 70))
+            labelSurf = TAB_FONT.render(label, True, (50, 50, 70))
 
             self.tabs[i] = (labelSurf, tabRect)
 
