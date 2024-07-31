@@ -189,7 +189,7 @@ class Display():
 
         # Drawing any points
         for point in points:
-            pg.draw.circle(self.graphSurf, (200, 75, 75), (centre[0] + point[0] * scale, centre[1] - point[1] * scale), 5)
+            pg.draw.circle(self.graphSurf, (200, 75, 75), (centre[0] + point.pos[0] * scale, centre[1] - point.pos[1] * scale), 5)
             
         # Drawing the border
         pg.draw.lines(self.graphSurf, (0, 0, 0), True, ((0, 0), (G_WIDTH - 1, 0), (G_WIDTH - 1, G_HEIGHT - 1), (0, G_HEIGHT - 1)), 5)

@@ -56,12 +56,6 @@ class World():
 
             i += 1
     
-
-        # Finding the apogee
-        maxTime = -yVel / yAcc
-        apogee = Point((xVel * maxTime + 0.5 * xAcc * maxTime ** 2, yVel * maxTime + 0.5 * yAcc * maxTime ** 2 + initPos[1]), (100, 70, 70), "Apogee")
-        
-        startPoint = Point(initPos, (70, 70, 100), "Start")
         
         b = initVelocity * sin(angle)
         endTime = (b + sqrt((b ** 2) - (2 * -gravity * initPos[1]))) / gravity
@@ -72,9 +66,22 @@ class World():
 
         line = Line(points, "Line", (100, 70, 70))
 
-        line.addProperties(startPoint, endPoint, apogee)
+        line.addProperties(endPoint)
 
         return line
+
+    def apogee(self, initPos, initVelocity, angle):
+        # Finding the apogee
+        xVel = initVelocity * cos(angle)
+        yVel = initVelocity * sin(angle)
+
+
+        maxTime = yVel / gravity
+        apogee = Point((xVel * maxTime, yVel * maxTime + 0.5 * -gravity * maxTime ** 2 + initPos[1]), (100, 70, 70), "Apogee")
+        return apogee
+    
+
+
 
     # Task 3
     def twoPoints(self, point1, point2, initVelocity):
@@ -91,8 +98,6 @@ class World():
         angle1 = arctan(z1)
         angle2 = arctan(z2)
 
-        self.points.append(point1)
-        self.points.append(point2)
 
         line1 = self.basicProj(point1, initVelocity, angle1)
         line2 = self.basicProj(point1, initVelocity, angle2)
@@ -438,7 +443,9 @@ class World():
                 if xPoint == "" or xPoint == ".": xPoint = 0
                 if yPoint == "" or xPoint == ".": yPoint = 0
                 point2 = (float(xPoint), float(yPoint))
-
+                
+                self.points.append(Point(point1))
+                self.points.append(Point(point2))
                 highBall, lowBall = self.twoPoints(point1, point2, velocity)
                 if self.display.checkBoxes[4].state: self.lines.append(highBall)
                 if self.display.checkBoxes[5].state: self.lines.append(lowBall)
@@ -470,7 +477,9 @@ class World():
                 self.bounceProj(point1, velocity, angle, coeffRest, bounces)
 
 
-            else: self.lines.append(self.basicProj(point1, velocity, angle))
+            else:
+                self.lines.append(self.basicProj(point1, velocity, angle))
+                self.points.append(self.apogee(point1, velocity, angle))
 
             # approxDist = world.approxDist(point1, velocity, angle)
             # calcDist = world.findDistance(point1, velocity, angle)
