@@ -94,8 +94,8 @@ class World():
         self.points.append(point1)
         self.points.append(point2)
 
-        line1, apogee1 = self.basicProj(point1, initVelocity, angle1)
-        line2, apogee2 = self.basicProj(point1, initVelocity, angle2)
+        line1 = self.basicProj(point1, initVelocity, angle1)
+        line2 = self.basicProj(point1, initVelocity, angle2)
 
         return line1, line2
 
@@ -123,7 +123,7 @@ class World():
         x = 0
         y = 0
         points = []
-        while y > -initPos[1]:
+        while y >= -initPos[1]:
             y = ((initVelocity ** 2) / (2 * gravity)) - ((gravity * (x ** 2)) / (2 * (initVelocity) ** 2))
             points.append((x + initPos[0], y + initPos[1]))
             x += 0.1
@@ -330,7 +330,31 @@ class World():
                             textBox.mouseClicked(event)
                         
                         # Tab Detection
-                        self.display.tabMenu.mouseClicked(event)
+                        if self.display.tabMenu.mouseClicked(event):
+                            self.display.sliders[3].hidden = True
+                            self.display.sliders[4].hidden = True
+
+                            self.display.textBoxes[2].hidden = True
+                            self.display.textBoxes[3].hidden = True
+                            self.display.textBoxes[4].hidden = True
+                            self.display.textBoxes[5].hidden = True
+
+                            self.display.checkBoxes[3].hidden = True
+                            self.display.checkBoxes[4].hidden = True
+                            self.display.checkBoxes[5].hidden = True
+
+                            if self.display.tabMenu.currentTab == 1:
+                                self.display.textBoxes[2].hidden = False
+                                self.display.textBoxes[3].hidden = False
+                                self.display.checkBoxes[3].hidden = False
+                                self.display.checkBoxes[4].hidden = False
+                                self.display.checkBoxes[5].hidden = False
+
+                            if self.display.tabMenu.currentTab == 2:
+                                self.display.sliders[3].hidden = False
+                                self.display.sliders[4].hidden = False
+                                self.display.textBoxes[4].hidden = False
+                                self.display.textBoxes[5].hidden = False
 
                 if event.type == pg.MOUSEBUTTONUP:
                     self.mouseTracking = False
@@ -365,22 +389,13 @@ class World():
                 slider.moveSlider(pg.mouse.get_pos()[0])
 
 
-    def activeUI(self):
-        self.display.textBoxes[2].hidden = True
-        self.display.textBoxes[3].hidden = True
-        
-        if self.display.tabMenu.currentTab == 0:
-            self.display.textBoxes[2].hidden = False
-            self.display.textBoxes[3].hidden = False
-
-
     def run(self):
         global gravity
         self.running = True
         self.mouseTracking = False
         self.subMouseTracking = False
         while self.running:
-            self.activeUI()
+
             self.lines = []
             self.points = []
             self.subLines = []
@@ -393,7 +408,6 @@ class World():
                 self.display.sliders[2].active = True
             gravity = self.display.sliders[2].value
 
-            
             self.doEvents()
             angle =  self.display.sliders[0].value / 180 * pi
             velocity = self.display.sliders[1].value
@@ -404,22 +418,52 @@ class World():
             if yPoint == "" or xPoint == ".": yPoint = 0
             point1 = (float(xPoint), float(yPoint))
 
-            if self.display.checkBoxes[0].state:
-                boundParabola = self.boundParabola(point1, velocity)
-                self.lines.append(boundParabola)
+            # Bounding Parabola
+            if self.display.checkBoxes[0].state: self.lines.append(self.boundParabola(point1, velocity))
+
+            # Maximum Range
+            if self.display.checkBoxes[2].state: self.lines.append(self.maxRange(point1, velocity))
+
+
+            # Two Points Tab
+            if self.display.tabMenu.currentTab == 1:
+                xPoint = self.display.textBoxes[2].value
+                yPoint = self.display.textBoxes[3].value
+                if xPoint == "" or xPoint == ".": xPoint = 0
+                if yPoint == "" or xPoint == ".": yPoint = 0
+                point2 = (float(xPoint), float(yPoint))
+
+                highBall, lowBall = self.twoPoints(point1, point2, velocity)
+                if self.display.checkBoxes[4].state: self.lines.append(highBall)
+                if self.display.checkBoxes[5].state: self.lines.append(lowBall)
+
+                if self.display.checkBoxes[3].state: self.lines.append(self.minVelocity(point1, point2))
             
+            if self.display.tabMenu.currentTab == 2:
+                dragCoeff = self.display.sliders[3].value
+                airDensity = self.display.sliders[4].value
+
+                crossArea = self.display.textBoxes[4].value
+                if crossArea == "" or crossArea == ".": crossArea = 0.01
+                crossArea = float(crossArea) / 10000
+
+                mass = self.display.textBoxes[5].value
+                if mass == "" or mass == ".": mass = 0
+                mass = float(mass) / 1000
+                if mass == 0: mass = 0.01
+
+                k = (0.5 * dragCoeff * airDensity * crossArea) / mass
+                print(k)
+                self.lines.append(self.testAirResistance(point1, velocity, angle, k))
+
+        
+
+            if self.display.tabMenu.currentTab == 2:
+                pass
+
 
             self.lines.append(self.basicProj(point1, velocity, angle))
 
-            dragCoeff = 0.1
-            crossArea = 0.00785
-            airDensity = 1
-            mass = 0.1
-
-            k = (0.5 * dragCoeff * airDensity * crossArea) / mass
-
-            # self.lines.append(self.airResistance(point1, velocity, angle, 0.003927))
-            # self.lines.append(self.testAirResistance(point1, velocity, angle, 0.003927))
             # approxDist = world.approxDist(point1, velocity, angle)
             # calcDist = world.findDistance(point1, velocity, angle)
 

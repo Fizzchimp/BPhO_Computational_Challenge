@@ -17,7 +17,10 @@ AXES_SCALES = (1, 2, 5)
 
 GRAPH_FONT = pg.font.SysFont("arial", 17)
 
-UI_FONT = pg.font.SysFont("arial", 17)
+UI_FONT = pg.font.SysFont("arial", 20)
+
+TITLE_FONT = pg.font.SysFont("arial", 20)
+TITLE_FONT.underline = True
 
 class Display():
     def __init__(self):
@@ -37,18 +40,28 @@ class Display():
     
         self.sliders = [Slider(690, 1075, 50, 45, 90, 0.5, "Angle: ___°"),
                         Slider(690, 1075, 100, 10, 50, 0.0625, "Velocity:  ___m/s"),
-                        Slider(690, 1075, 270, 9.81, 20, 0.0625, "Gravity:  ___N/Kg")]
+                        Slider(690, 1075, 270, 9.81, 20, 0.0625, "Gravity:  ___N/Kg"),
+                        Slider(710, 1055, 440, 0.5, 3, 0.00390625, "Drag Coefficient: ___", hidden = True),
+                        Slider(710, 1055, 500, 1.204, 5, 0.015625, "Air Density: ___Kg/m³", hidden = True)]
         
         self.checkBoxes = [CheckBox((900, 150), "Bounding Parabola"),
                            CheckBox((710, 230), "Earth Gravity", True),
-                           CheckBox((900, 180), "Bounce")]
+                           CheckBox((710, 300), "Maximum Range"),
+                           CheckBox((710, 500), "Minimum Velocity", True, hidden = True),
+                           CheckBox((710, 530), "High Ball", hidden = True),
+                           CheckBox((710, 560), "Low Ball", hidden = True)]
 
-        self.textBoxes = [TextBox((710, 150), 40, "X : ", 0),
-                          TextBox((790, 150), 40, "Y : ", 0),
-                          TextBox((710, 500), 40, "X : ", 10, True),
-                          TextBox((790, 500), 40, "Y : ", 10, True)]
+        self.textBoxes = [TextBox((710, 170), 40, "X : ", 0),
+                          TextBox((790, 170), 40, "Y : ", 0),
+                          TextBox((720, 430), 40, "X : ", 3, True),
+                          TextBox((800, 430), 40, "Y : ", 3, True),
+                          TextBox((915, 540), 40, "Cross Sectional Area (cm²): ", 10, True),
+                          TextBox((793, 590), 40, "Mass (g): ", 5, True)]
         
-        self.tabMenu = TabMenu((680, 375), (1085, 685), ("Two Points", "Sub Graph", "Air Resistance"))
+        self.tabMenu = TabMenu((680, 375), (1085, 685), ("Sub Graph", "Two Points", "Air Resistance"))
+
+        self.textSurfs = [TITLE_FONT.render("Launch Point:", True, (50, 50, 70)),
+                          TITLE_FONT.render("Second Point:", True, (50, 50, 70))]
 
     def drawScreen(self, lines, points, relMousePos, subLines):
         self.screen.fill((150, 150, 175))
@@ -57,7 +70,9 @@ class Display():
         # Draw the Tab Menu
         self.tabMenu.draw(self.screen)
 
-        if self.tabMenu.currentTab == 1: self.drawSubGraph(subLines, None)
+        self.screen.blit(self.textSurfs[0], (690, 130))
+        if self.tabMenu.currentTab == 0: self.drawSubGraph(subLines, None)
+        if self.tabMenu.currentTab == 1: self.screen.blit(self.textSurfs[1], (690, 390), )
         
         # Draw all sliders
         for slider in self.sliders:
@@ -234,7 +249,7 @@ class Slider():
             pg.draw.circle(surface, circColour, (self.xPos1 + self.value / self.range * self.length, self.yPos), 7)
             
             labelSurf = UI_FONT.render(self.label.replace("___", str(self.value)), True, fontColour)
-            surface.blit(labelSurf, (self.xPos1, self.yPos - 25))
+            surface.blit(labelSurf, (self.xPos1, self.yPos - 30))
     
     def moveSlider(self, mousePos):
         if self.xPos1 <= mousePos <= self.xPos2:
@@ -265,18 +280,18 @@ class CheckBox():
 
     def draw(self, surface):
         if not self.hidden:
-            pg.draw.rect(surface, (100, 100, 100), pg.Rect(self.pos[0] - 7, self.pos[1] - 7, 14, 14))
-            pg.draw.rect(surface, (200, 200, 200), pg.Rect(self.pos[0] - 5, self.pos[1] - 5, 10, 10))
+            pg.draw.rect(surface, (100, 100, 100), pg.Rect(self.pos[0] - 7, self.pos[1] - 7, 18, 18))
+            pg.draw.rect(surface, (200, 200, 200), pg.Rect(self.pos[0] - 5, self.pos[1] - 5, 14, 14))
             if self.state:
-                pg.draw.rect(surface, (70, 70, 70), pg.Rect(self.pos[0] - 4, self.pos[1] - 4, 8, 8))
+                pg.draw.rect(surface, (70, 70, 70), pg.Rect(self.pos[0] - 4, self.pos[1] - 4, 12, 12))
                 
             
             labelSurf = UI_FONT.render(self.label, True, (50, 50, 60))
-            surface.blit(labelSurf, (self.pos[0] + 12, self.pos[1] - 10))
+            surface.blit(labelSurf, (self.pos[0] + 15, self.pos[1] - 10))
             
 
     def inHitbox(self, mousePos):
-        if self.pos[0] - 7 <= mousePos[0] <= self.pos[0] + 7 and self.pos[1] - 7 <= mousePos[1] <= self.pos[1] + 7:
+        if self.pos[0] - 7 <= mousePos[0] <= self.pos[0] + 11 and self.pos[1] - 7 <= mousePos[1] <= self.pos[1] + 11:
                 if self.state: self.state = False
                 else: self.state = True
 
@@ -307,11 +322,11 @@ class TextBox():
 
             valSurf = UI_FONT.render(str(self.value), True, (50, 50, 70))
             valDims = valSurf.get_size()
-            surface.blit(valSurf, (self.pos[0] + 5, self.pos[1] + 3))
+            surface.blit(valSurf, (self.pos[0] + 5, self.pos[1] + 1))
 
             if self.tracking:
                 if (self.cursorTime // 500) %  2 == 0:
-                    surface.blit(UI_FONT.render("|", True, (70, 70, 100)), (self.pos[0] + 5 + valDims[0], self.pos[1] + 1))
+                    surface.blit(UI_FONT.render("|", True, (70, 70, 100)), (self.pos[0] + 5 + valDims[0], self.pos[1] - 1))
                 self.cursorTime += self.cursorClock.tick()
 
     def mouseClicked(self, event):
@@ -356,7 +371,7 @@ class TabMenu():
     def draw(self, surface):
         r = 3
         bCol = (50, 50, 80)
-        darkCol = (110, 110, 140)
+        darkCol = (120, 120, 150)
 
         for i, (labelSurf, rect) in enumerate(self.tabs):
             pg.draw.rect(surface, (130, 130, 160), rect, 0, -1, r, r)
@@ -383,3 +398,4 @@ class TabMenu():
         for i, tab in enumerate(self.tabs):
             if tab[1].collidepoint(event.pos):
                 self.currentTab = i
+                return True
