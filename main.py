@@ -311,50 +311,50 @@ class World():
                         self.mouseTracking = True
                         pg.mouse.get_rel()
                         
-                    elif subMousePos != False:
+                    if subMousePos != False:
                         self.subMouseTracking = True
                         pg.mouse.get_rel()
 
-                    else:
-                        # Slider Tracking
-                        for slider in self.display.sliders:
-                            if slider.active:
-                                slider.getTracking(mousePos)
+                    
+                    # Slider Tracking
+                    for slider in self.display.sliders:
+                        if slider.active:
+                            slider.getTracking(mousePos)
 
-                        # CheckBox Detection
-                        for checkBox in self.display.checkBoxes:
-                            checkBox.inHitbox(mousePos)
+                    # CheckBox Detection
+                    for checkBox in self.display.checkBoxes:
+                        checkBox.inHitbox(mousePos)
 
-                        # TextBox Tracking
-                        for textBox in self.display.textBoxes:
-                            textBox.mouseClicked(event)
-                        
-                        # Tab Detection
-                        if self.display.tabMenu.mouseClicked(event):
-                            self.display.sliders[3].hidden = True
-                            self.display.sliders[4].hidden = True
+                    # TextBox Tracking
+                    for textBox in self.display.textBoxes:
+                        textBox.mouseClicked(event)
+                    
+                    # Tab Detection
+                    if self.display.tabMenu.mouseClicked(event):
+                        self.display.sliders[3].hidden = True
+                        self.display.sliders[4].hidden = True
 
-                            self.display.textBoxes[2].hidden = True
-                            self.display.textBoxes[3].hidden = True
-                            self.display.textBoxes[4].hidden = True
-                            self.display.textBoxes[5].hidden = True
+                        self.display.textBoxes[2].hidden = True
+                        self.display.textBoxes[3].hidden = True
+                        self.display.textBoxes[4].hidden = True
+                        self.display.textBoxes[5].hidden = True
 
-                            self.display.checkBoxes[3].hidden = True
-                            self.display.checkBoxes[4].hidden = True
-                            self.display.checkBoxes[5].hidden = True
+                        self.display.checkBoxes[3].hidden = True
+                        self.display.checkBoxes[4].hidden = True
+                        self.display.checkBoxes[5].hidden = True
 
-                            if self.display.tabMenu.currentTab == 1:
-                                self.display.textBoxes[2].hidden = False
-                                self.display.textBoxes[3].hidden = False
-                                self.display.checkBoxes[3].hidden = False
-                                self.display.checkBoxes[4].hidden = False
-                                self.display.checkBoxes[5].hidden = False
+                        if self.display.tabMenu.currentTab == 1:
+                            self.display.textBoxes[2].hidden = False
+                            self.display.textBoxes[3].hidden = False
+                            self.display.checkBoxes[3].hidden = False
+                            self.display.checkBoxes[4].hidden = False
+                            self.display.checkBoxes[5].hidden = False
 
-                            if self.display.tabMenu.currentTab == 2:
-                                self.display.sliders[3].hidden = False
-                                self.display.sliders[4].hidden = False
-                                self.display.textBoxes[4].hidden = False
-                                self.display.textBoxes[5].hidden = False
+                        if self.display.tabMenu.currentTab == 2:
+                            self.display.sliders[3].hidden = False
+                            self.display.sliders[4].hidden = False
+                            self.display.textBoxes[4].hidden = False
+                            self.display.textBoxes[5].hidden = False
 
                 if event.type == pg.MOUSEBUTTONUP:
                     self.mouseTracking = False
@@ -453,7 +453,6 @@ class World():
                 if mass == 0: mass = 0.01
 
                 k = (0.5 * dragCoeff * airDensity * crossArea) / mass
-                print(k)
                 self.lines.append(self.testAirResistance(point1, velocity, angle, k))
 
         
@@ -472,6 +471,7 @@ class World():
             self.subLines.append(self.timeRangeGraph(point1, velocity, angle))
             
             self.display.drawScreen(self.lines, self.points, self.graphMousePos(), self.subLines)
+            print(pg.mouse.get_pos())
 
 world = World()
 

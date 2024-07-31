@@ -7,11 +7,11 @@ HEIGHT = 700
 G_WIDTH = 650
 G_HEIGHT = 620
 
-SUB_WIDTH = 250
-SUB_HEIGHT = 150
+SUB_WIDTH = 375
+SUB_HEIGHT = 230
 
 G_POINT = (15, 15)
-SUB_POINT = (WIDTH - SUB_WIDTH - 25, HEIGHT - SUB_HEIGHT - 50)
+SUB_POINT = (WIDTH - SUB_WIDTH - 30, HEIGHT - SUB_HEIGHT - 30)
 
 AXES_SCALES = (1, 2, 5)
 
@@ -41,22 +41,22 @@ class Display():
         self.sliders = [Slider(690, 1075, 50, 45, 90, 0.5, "Angle: ___°"),
                         Slider(690, 1075, 100, 10, 50, 0.0625, "Velocity:  ___m/s"),
                         Slider(690, 1075, 270, 9.81, 20, 0.0625, "Gravity:  ___N/Kg"),
-                        Slider(710, 1055, 440, 0.5, 3, 0.00390625, "Drag Coefficient: ___", hidden = True),
+                        Slider(710, 1055, 440, 0.5, 2, 0.00390625, "Drag Coefficient: ___", hidden = True),
                         Slider(710, 1055, 500, 1.204, 5, 0.015625, "Air Density: ___Kg/m³", hidden = True)]
         
         self.checkBoxes = [CheckBox((900, 150), "Bounding Parabola"),
                            CheckBox((710, 230), "Earth Gravity", True),
                            CheckBox((710, 300), "Maximum Range"),
-                           CheckBox((710, 500), "Minimum Velocity", True, hidden = True),
-                           CheckBox((710, 530), "High Ball", hidden = True),
-                           CheckBox((710, 560), "Low Ball", hidden = True)]
+                           CheckBox((710, 510), "Minimum Velocity", True, hidden = True),
+                           CheckBox((710, 545), "High Ball", hidden = True),
+                           CheckBox((710, 580), "Low Ball", hidden = True)]
 
         self.textBoxes = [TextBox((710, 170), 40, "X : ", 0),
                           TextBox((790, 170), 40, "Y : ", 0),
-                          TextBox((720, 430), 40, "X : ", 3, True),
-                          TextBox((800, 430), 40, "Y : ", 3, True),
+                          TextBox((732, 440), 40, "X : ", 3, True),
+                          TextBox((812, 440), 40, "Y : ", 3, True),
                           TextBox((915, 540), 40, "Cross Sectional Area (cm²): ", 10, True),
-                          TextBox((793, 590), 40, "Mass (g): ", 5, True)]
+                          TextBox((784, 590), 40, "Mass (g): ", 5, True)]
         
         self.tabMenu = TabMenu((680, 375), (1085, 685), ("Sub Graph", "Two Points", "Air Resistance"))
 
@@ -72,7 +72,7 @@ class Display():
 
         self.screen.blit(self.textSurfs[0], (690, 130))
         if self.tabMenu.currentTab == 0: self.drawSubGraph(subLines, None)
-        if self.tabMenu.currentTab == 1: self.screen.blit(self.textSurfs[1], (690, 390), )
+        if self.tabMenu.currentTab == 1: self.screen.blit(self.textSurfs[1], (707, 400), )
         
         # Draw all sliders
         for slider in self.sliders:
