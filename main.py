@@ -38,7 +38,6 @@ class World():
         xVel = initVelocity * cos(angle)
         yVel = initVelocity * sin(angle)
 
-        xAcc = 0
         yAcc = -gravity
 
         xDif = 0.1
@@ -61,12 +60,10 @@ class World():
         endTime = (b + sqrt((b ** 2) - (2 * -gravity * initPos[1]))) / gravity
 
         endPos = (initPos[0] + initVelocity * cos(angle) * endTime, 0)
-        endPoint = Point(endPos, (70, 70, 100), "End")
         points.append(endPos)
 
-        line = Line(points, "Line", (100, 70, 70))
-
-        line.addProperties(endPoint)
+        line = Line(points, "Line", (0, 0, 0))
+        line.addProperties(f"Velocity: {round(initVelocity, 2)}m/s", f"Angle: {round(angle / pi * 180, 2)}°", f"Horizontal Range: {round(endPos[0] - initPos[0], 2)}m", f"Time of flight: {round(endTime, 3)}s")
 
         return line
 
@@ -77,7 +74,7 @@ class World():
 
 
         maxTime = yVel / gravity
-        apogee = Point((xVel * maxTime, yVel * maxTime + 0.5 * -gravity * maxTime ** 2 + initPos[1]), (100, 70, 70), "Apogee")
+        apogee = Point((initPos[0] + xVel * maxTime, yVel * maxTime + 0.5 * -gravity * maxTime ** 2 + initPos[1]), (100, 70, 70), "Apogee")
         return apogee
     
 
@@ -120,7 +117,9 @@ class World():
     def maxRange(self, initPos, initVelocity):
         yDisp = -initPos[1]
         angle = arcsin(1 / (sqrt(2 + ((2 * gravity * -yDisp) / (initVelocity ** 2)))))
-        return self.basicProj(initPos, initVelocity, angle)
+        maxLine = self.basicProj(initPos, initVelocity, angle)
+        maxLine.colour = (184, 135, 11)
+        return maxLine
     
 
     # Task 5
@@ -133,7 +132,7 @@ class World():
             points.append((x + initPos[0], y + initPos[1]))
             x += 0.1
 
-        line = Line(points, "Bounding Parabola")
+        line = Line(points, "Bounding Parabola", (140, 20, 120))
         return line
 
 
@@ -186,7 +185,7 @@ class World():
     def bounceProj(self, initPos, initVelocity, angle, coeffRest, iterationsLeft):
         self.lines.append(self.basicProj(initPos, initVelocity, angle))
         
-        if iterationsLeft > 1:
+        if iterationsLeft > 0:
             b = initVelocity * sin(angle)
             endTime = (b + sqrt((b ** 2) - (2 * -gravity * initPos[1]))) / gravity
             
@@ -297,7 +296,7 @@ class World():
                             self.display.graphCentre = [G_WIDTH // 2 - difference[0] / 1.125, G_HEIGHT // 2 - difference[1] / 1.125]
                     
                     # Sub Graph Zoom
-                    elif subMousePos != False:
+                    elif self.display.tabMenu.currentTab == 0 and subMousePos != False:
                         if event.y == 1:
                             difference = (subMousePos[0] - subCentre[0], subMousePos[1] - subCentre[1])
                             self.display.subZoom /= 1.125
@@ -316,7 +315,7 @@ class World():
                         self.mouseTracking = True
                         pg.mouse.get_rel()
                         
-                    if subMousePos != False:
+                    if self.display.tabMenu.currentTab == 0 and subMousePos != False:
                         self.subMouseTracking = True
                         pg.mouse.get_rel()
 
@@ -478,8 +477,12 @@ class World():
 
 
             else:
-                self.lines.append(self.basicProj(point1, velocity, angle))
-                self.points.append(self.apogee(point1, velocity, angle))
+                basicLine = self.basicProj(point1, velocity, angle)
+                basicLine.addProperties(f"Distance Travelled: {round(self.findDistance(point1, velocity, angle), 3)}m")
+                self.lines.append(basicLine)
+
+
+                if self.display.checkBoxes[6].state: self.points.append(self.apogee(point1, velocity, angle))
 
             # approxDist = world.approxDist(point1, velocity, angle)
             # calcDist = world.findDistance(point1, velocity, angle)

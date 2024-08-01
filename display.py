@@ -19,6 +19,7 @@ GRAPH_FONT = pg.font.SysFont("arial", 17)
 
 TAB_FONT = pg.font.SysFont("arial", 17)
 UI_FONT = pg.font.SysFont("arial", 20)
+SMALL_FONT = pg.font.SysFont("arial", 15)
 
 TITLE_FONT = pg.font.SysFont("arial", 20)
 TITLE_FONT.underline = True
@@ -47,12 +48,13 @@ class Display():
                         Slider(710, 1055, 480, 0.5, 1, 0.00390625, "Coefficient of Restitution: ___", hidden = True),
                         Slider(710, 1055, 570, 4, 10, 1, "Number of bounces: ___", hidden = True)]
         
-        self.checkBoxes = [CheckBox((900, 160), "Bounding Parabola"),
+        self.checkBoxes = [CheckBox((900, 140), "Bounding Parabola"),
                            CheckBox((697, 255), "Earth Gravity", True),
-                           CheckBox((900, 200), "Maximum Range"),
+                           CheckBox((900, 180), "Maximum Range"),
                            CheckBox((710, 510), "Minimum Velocity", True, hidden = True),
                            CheckBox((710, 545), "High Ball", hidden = True),
-                           CheckBox((710, 580), "Low Ball", hidden = True)]
+                           CheckBox((710, 580), "Low Ball", hidden = True), 
+                           CheckBox((900, 220), "Apogee")]
 
         self.textBoxes = [TextBox((716, 170), 40, "X : ", 0),
                           TextBox((794, 170), 40, "Y : ", 0),
@@ -69,6 +71,11 @@ class Display():
     def drawScreen(self, lines, points, relMousePos, subLines):
         self.screen.fill((150, 150, 175))
         self.drawGraph(lines, points)
+
+        # Draw a box for the properties
+        for i, line in enumerate(lines):
+            if line.properties != []: self.drawPropBox(line.properties, line.colour, i)
+
 
         # Draw the Tab Menu
         self.tabMenu.draw(self.screen)
@@ -217,6 +224,14 @@ class Display():
         pg.draw.lines(self.subGraphSurf, (0, 0, 0), True, ((0, 0), (SUB_WIDTH - 1, 0), (SUB_WIDTH - 1, SUB_HEIGHT - 1), (0, SUB_HEIGHT - 1)), 5)
         self.screen.blit(self.subGraphSurf, SUB_POINT)
 
+    def drawPropBox(self, properties, colour, iteration):
+        boxSurf = pg.Surface((250, 60))
+        boxSurf.fill((170, 170, 200))
+        for i, text in enumerate(properties):
+            textSurf = SMALL_FONT.render(text, True, (50, 50, 50))
+            boxSurf.blit(textSurf, (3 + (i // 3) * 100, (i % 3) * 20))
+        
+        self.screen.blit(boxSurf, (100 + (250 * iteration), 637))
 
 
 class Slider():
