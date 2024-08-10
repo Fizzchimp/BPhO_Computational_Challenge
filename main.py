@@ -63,7 +63,7 @@ class World():
         points.append(endPos)
 
         line = Line(points, "Line", (0, 0, 0))
-        line.addProperties(f"Velocity: {round(initVelocity, 2)}m/s", f"Angle: {round(angle / pi * 180, 2)}°", f"Horizontal Range: {round(endPos[0] - initPos[0], 2)}m", f"Time of flight: {round(endTime, 3)}s")
+        line.addProperties(f"{round(initVelocity, 2)}m/s", f"Angle: {round(angle / pi * 180, 2)}°", f"Horizontal Range: {round(endPos[0] - initPos[0], 2)}m", f"Time of flight: {round(endTime, 3)}s")
 
         return line
 
@@ -99,7 +99,7 @@ class World():
         line1 = self.basicProj(point1, initVelocity, angle1)
         line2 = self.basicProj(point1, initVelocity, angle2)
 
-        return line1, line2
+        return (round(angle1 / pi * 180, 2), line1), (round(angle2 / pi * 180, 2), line2)
 
     def minVelocity(self, point1, point2):
         xDisp = point2[0] - point1[0]
@@ -110,7 +110,7 @@ class World():
 
         velocity = sqrt(gravity * xDisp * tangle)
 
-        return self.basicProj(point1, velocity, angle)
+        return round(velocity, 2), round(angle / pi * 180, 2), self.basicProj(point1, velocity, angle)
 
 
     # Task 4
@@ -119,7 +119,13 @@ class World():
         angle = arcsin(1 / (sqrt(2 + ((2 * gravity * -yDisp) / (initVelocity ** 2)))))
         maxLine = self.basicProj(initPos, initVelocity, angle)
         maxLine.colour = (184, 135, 11)
-        return maxLine
+
+        b = initVelocity * sin(angle)
+        endTime = (b + sqrt((b ** 2) - (2 * -gravity * initPos[1]))) / gravity
+
+        range = initVelocity * cos(angle) * endTime
+
+        return round(angle / pi * 180, 2), round(range, 2), maxLine
     
 
     # Task 5
@@ -410,6 +416,11 @@ class World():
             self.points = []
             self.subLines = []
             self.subPoints = []
+            minVel = None
+            minVelAngle = None
+            highBallAng, lowBallAng = None, None
+            maxAng = None
+            maxRange = None
 
             if self.display.checkBoxes[1].state:
                 self.display.sliders[2].value = 9.81
@@ -428,11 +439,20 @@ class World():
             if yPoint == "" or xPoint == ".": yPoint = 0
             point1 = (float(xPoint), float(yPoint))
 
+            basicLine = self.basicProj(point1, velocity, angle)
+            basicLine.addProperties(f"Distance Travelled: {round(self.findDistance(point1, velocity, angle), 3)}m")
+            self.lines.append(basicLine)
+
+
+            if self.display.checkBoxes[6].state: self.points.append(self.apogee(point1, velocity, angle))
+
             # Bounding Parabola
             if self.display.checkBoxes[0].state: self.lines.append(self.boundParabola(point1, velocity))
 
             # Maximum Range
-            if self.display.checkBoxes[2].state: self.lines.append(self.maxRange(point1, velocity))
+            if self.display.checkBoxes[2].state:
+                maxAng, maxRange, maxRangeLine = self.maxRange(point1, velocity)
+                self.lines.append(maxRangeLine)
 
 
             # Two Points Tab
@@ -445,11 +465,19 @@ class World():
                 
                 self.points.append(Point(point1))
                 self.points.append(Point(point2))
-                highBall, lowBall = self.twoPoints(point1, point2, velocity)
-                if self.display.checkBoxes[4].state: self.lines.append(highBall)
-                if self.display.checkBoxes[5].state: self.lines.append(lowBall)
+                highBall, lowBall, = self.twoPoints(point1, point2, velocity)
 
-                if self.display.checkBoxes[3].state: self.lines.append(self.minVelocity(point1, point2))
+                if self.display.checkBoxes[4].state:
+                    highBallAng = highBall[0]
+                    self.lines.append(highBall[1])
+                if self.display.checkBoxes[5].state:
+                    lowBallAng = lowBall[0]
+                    self.lines.append(lowBall[1])
+
+                
+                if self.display.checkBoxes[3].state:
+                    minVel, minVelAngle, minVelLine = self.minVelocity(point1, point2)
+                    self.lines.append(minVelLine)
             
             # Air resistance Tab
             if self.display.tabMenu.currentTab == 2:
@@ -475,23 +503,9 @@ class World():
                 bounces = self.display.sliders[6].value
                 self.bounceProj(point1, velocity, angle, coeffRest, bounces)
 
-
-            else:
-                basicLine = self.basicProj(point1, velocity, angle)
-                basicLine.addProperties(f"Distance Travelled: {round(self.findDistance(point1, velocity, angle), 3)}m")
-                self.lines.append(basicLine)
-
-
-                if self.display.checkBoxes[6].state: self.points.append(self.apogee(point1, velocity, angle))
-
-            # approxDist = world.approxDist(point1, velocity, angle)
-            # calcDist = world.findDistance(point1, velocity, angle)
-
-            # self.bounceProj(point1, velocity, angle, 0.8, 4)
-
             self.subLines.append(self.timeRangeGraph(point1, velocity, angle))
             
-            self.display.drawScreen(self.lines, self.points, self.graphMousePos(), self.subLines)
+            self.display.drawScreen(self.lines, self.points, self.graphMousePos(), self.subLines, ((minVel, minVelAngle), highBallAng, lowBallAng), (maxAng, maxRange))
 
 world = World()
 

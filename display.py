@@ -54,7 +54,7 @@ class Display():
                            CheckBox((710, 510), "Minimum Velocity", True, hidden = True),
                            CheckBox((710, 545), "High Ball", hidden = True),
                            CheckBox((710, 580), "Low Ball", hidden = True), 
-                           CheckBox((900, 220), "Apogee")]
+                           CheckBox((900, 240), "Apogee")]
 
         self.textBoxes = [TextBox((716, 170), 40, "X : ", 0),
                           TextBox((794, 170), 40, "Y : ", 0),
@@ -68,13 +68,23 @@ class Display():
         self.textSurfs = [TITLE_FONT.render("Launch Point:", True, (50, 50, 70)),
                           TITLE_FONT.render("Second Point:", True, (50, 50, 70))]
 
-    def drawScreen(self, lines, points, relMousePos, subLines):
+    def drawScreen(self, lines, points, relMousePos, subLines, twoPVals = (None, None, None), maxRangeVals = (None, None), apogee = None):
         self.screen.fill((150, 150, 175))
         self.drawGraph(lines, points)
 
         # Draw a box for the properties
-        for i, line in enumerate(lines):
-            if line.properties != []: self.drawPropBox(line.properties, line.colour, i)
+        self.drawPropBox(lines[0].properties)
+
+        # Draw the value for the maximum range
+        if maxRangeVals[0] != None:
+            maxRangeText = UI_FONT.render(f"{maxRangeVals[0]}°: {maxRangeVals[1]}m", True, (50, 50, 50))
+            self.screen.blit(maxRangeText, (900, 195))
+
+        # Draw the value for apogee
+        if self.checkBoxes[6].state:
+            pos = points[0].pos
+            apogeePoint = UI_FONT.render(f"({round(pos[0], 2)}, {round(pos[1], 2)})", True, (50, 50, 50))
+            self.screen.blit(apogeePoint, (900, 260))
 
 
         # Draw the Tab Menu
@@ -83,6 +93,20 @@ class Display():
         self.screen.blit(self.textSurfs[0], (690, 130))
         if self.tabMenu.currentTab == 0: self.drawSubGraph(subLines, None)
         if self.tabMenu.currentTab == 1: self.screen.blit(self.textSurfs[1], (707, 400), )
+
+        # Draw all the values for the two Points tab
+        if self.tabMenu.currentTab == 1:
+            if twoPVals[0][0] != None:
+                minVel = UI_FONT.render(f"{twoPVals[0][0]}m/s at {twoPVals[0][1]}°", True, (50, 50, 50))
+                self.screen.blit(minVel, (900, 501))
+
+            if twoPVals[1] != None:
+                highBallAngle = UI_FONT.render(f"{twoPVals[1]}°", True, (50, 50, 50))
+                self.screen.blit(highBallAngle, (900, 536))
+            
+            if twoPVals[2] != None:
+                lowBallAngle = UI_FONT.render(f"{twoPVals[2]}°", True, (50, 50, 50))
+                self.screen.blit(lowBallAngle, (900, 571))
         
         # Draw all sliders
         for slider in self.sliders:
@@ -224,14 +248,14 @@ class Display():
         pg.draw.lines(self.subGraphSurf, (0, 0, 0), True, ((0, 0), (SUB_WIDTH - 1, 0), (SUB_WIDTH - 1, SUB_HEIGHT - 1), (0, SUB_HEIGHT - 1)), 5)
         self.screen.blit(self.subGraphSurf, SUB_POINT)
 
-    def drawPropBox(self, properties, colour, iteration):
+    def drawPropBox(self, properties):
         boxSurf = pg.Surface((250, 60))
         boxSurf.fill((170, 170, 200))
         for i, text in enumerate(properties):
             textSurf = SMALL_FONT.render(text, True, (50, 50, 50))
             boxSurf.blit(textSurf, (3 + (i // 3) * 100, (i % 3) * 20))
         
-        self.screen.blit(boxSurf, (100 + (250 * iteration), 637))
+        self.screen.blit(boxSurf, (150, 637))
 
 
 class Slider():
