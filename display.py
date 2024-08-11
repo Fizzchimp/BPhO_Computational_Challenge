@@ -68,7 +68,7 @@ class Display():
         self.textSurfs = [TITLE_FONT.render("Launch Point:", True, (50, 50, 70)),
                           TITLE_FONT.render("Second Point:", True, (50, 50, 70))]
 
-    def drawScreen(self, lines, points, relMousePos, subLines, twoPVals = (None, None, None), maxRangeVals = (None, None), apogee = None):
+    def drawScreen(self, lines, points, relMousePos, subLines, twoPVals = (None, None, None), maxRangeVals = (None, None), subPoints = None):
         self.screen.fill((150, 150, 175))
         self.drawGraph(lines, points)
 
@@ -91,7 +91,7 @@ class Display():
         self.tabMenu.draw(self.screen)
 
         self.screen.blit(self.textSurfs[0], (690, 130))
-        if self.tabMenu.currentTab == 0: self.drawSubGraph(subLines, None)
+        if self.tabMenu.currentTab == 0: self.drawSubGraph(subLines, subPoints)
         if self.tabMenu.currentTab == 1: self.screen.blit(self.textSurfs[1], (707, 400), )
 
         # Draw all the values for the two Points tab
@@ -242,6 +242,11 @@ class Display():
                 point2 = (centre[0] + l_points[i + 1][0] * scale,
                           centre[1] - l_points[i + 1][1] * scale)
                 pg.draw.aaline(self.subGraphSurf, (0, 0, 0), point1, point2)
+
+
+        # Drawing any points
+        for point in points:
+            pg.draw.circle(self.subGraphSurf, (200, 75, 75), (centre[0] + point.pos[0] * scale, centre[1] - point.pos[1] * scale), 5)
 
 
         # Drawing the border

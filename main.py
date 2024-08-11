@@ -179,12 +179,32 @@ class World():
 
         points = []
         iters = 30
+        max = (-1, -1)
+        min = (999, 999)
+        trackingMax = True
+        trackingMin = False
         for i in range(iters):
             time = i / iters * endTime
             displacement = sqrt((initVelocity ** 2) * (time ** 2) - gravity * (time ** 3) * initVelocity * sin(angle) + 0.25 * (gravity ** 2) * (time ** 4))
-            points.append((time, displacement))
+           
+            
+            if trackingMax:
+                if displacement > max[1]:
+                    max = (time, displacement)
+                else:
+                    trackingMax = False
+                    trackingMin = True
+            
+            if trackingMin:
+                if displacement < min[1]:
+                    min = (time, displacement)
 
-        return Line(points, "Range/Time", (0, 0))
+            points.append((time, displacement))
+            
+        max = Point(max, "Maximum")
+        min = Point(min, "Minimum")
+
+        return Line(points, "Range/Time", (0, 0)), max, min
 
 
     # Task 8
@@ -503,9 +523,12 @@ class World():
                 bounces = self.display.sliders[6].value
                 self.bounceProj(point1, velocity, angle, coeffRest, bounces)
 
-            self.subLines.append(self.timeRangeGraph(point1, velocity, angle))
+            subLine, max, min = self.timeRangeGraph(point1, velocity, angle)
+            self.subLines.append(subLine)
+            if min.pos[0] != 999: self.subPoints.append(min)
+            if max.pos[0] != 0: self.subPoints.append(max)
             
-            self.display.drawScreen(self.lines, self.points, self.graphMousePos(), self.subLines, ((minVel, minVelAngle), highBallAng, lowBallAng), (maxAng, maxRange))
+            self.display.drawScreen(self.lines, self.points, self.graphMousePos(), self.subLines, ((minVel, minVelAngle), highBallAng, lowBallAng), (maxAng, maxRange), self.subPoints)
 
 world = World()
 
